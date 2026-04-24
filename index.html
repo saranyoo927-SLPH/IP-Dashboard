@@ -2,37 +2,91 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>IP Dashboard Professional v2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Dashboard Professional v2 - Single Page</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #AEC6CF; /* Pastel Blue */
-            --success: #77DD77; /* Pastel Green */
-            --danger: #FFB7B2;  /* Pastel Red/Pink */
-            --warning: #FDFD96; /* Pastel Yellow */
-            --bg: #fdfdfd;
-            --white: #ffffff;
-            --text: #4a4a4a;
-            --shadow: 0 8px 30px rgba(0,0,0,0.04);
+            --primary: #AEC6CF; --success: #77DD77; --danger: #FFB7B2;
+            --warning: #FDFD96; --bg: #fdfdfd; --white: #ffffff;
+            --text: #4a4a4a; --shadow: 0 8px 30px rgba(0,0,0,0.04);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+        
+        /* ล็อกความสูงหน้าจอ */
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            display: grid; 
+            grid-template-columns: 240px 1fr; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
         
         .sidebar { background: var(--white); padding: 2rem 1.5rem; border-right: 1px solid #f0f0f0; }
-        .content { padding: 2rem 3rem; }
         
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .card { 
-            background: var(--white); padding: 1.2rem; border-radius: 20px; box-shadow: var(--shadow);
-            border: 1px solid #f9f9f9; text-align: center;
+        /* ส่วนเนื้อหาหลักใช้ Flexbox แนวตั้ง */
+        .content { 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 2rem;
+            gap: 1rem;
+            overflow: hidden;
         }
-        .card-val { font-size: 1.6rem; font-weight: 600; color: #5a5a5a; }
         
-        .chart-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-        .chart-card { background: var(--white); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); }
+        header { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; }
         
+        /* ปรับขนาด Stat Grid ให้เล็กลงเล็กน้อย */
+        .stat-grid { 
+            flex: 0 0 auto;
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 1rem; 
+        }
+        .card { 
+            background: var(--white); padding: 0.8rem; border-radius: 15px; 
+            box-shadow: var(--shadow); border: 1px solid #f9f9f9; text-align: center;
+        }
+        .card small { font-size: 0.75rem; color: var(--muted); }
+        .card-val { font-size: 1.4rem; font-weight: 600; color: #5a5a5a; }
+        
+        /* ส่วนของกราฟจะขยายตัวเต็มพื้นที่ที่เหลือ */
+        .charts-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 0; /* สำคัญเพื่อให้ flex item หดตัวได้ */
+        }
+
+        .chart-main-grid { 
+            flex: 1.2; /* สัดส่วนแถวบน */
+            display: grid; 
+            grid-template-columns: 1.5fr 1fr; 
+            gap: 1rem; 
+            min-height: 0;
+        }
+
+        .chart-card { 
+            background: var(--white); 
+            padding: 1rem; 
+            border-radius: 15px; 
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .chart-card h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .chart-card canvas { flex: 1; width: 100% !important; height: 100% !important; }
+
+        .histogram-section {
+            flex: 0.8; /* สัดส่วนแถวล่าง */
+            min-height: 0;
+        }
+
         #loader { position: fixed; inset: 0; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 1000; }
     </style>
 </head>
@@ -42,130 +96,19 @@
 
 <aside class="sidebar">
     <h2 style="color:var(--primary);"><i class="fas fa-notes-medical"></i> Dashboard</h2>
-    <div style="margin-top:2rem; color:#ccc;">MENU</div>
-    <div style="color:var(--primary); font-weight:500;"><i class="fas fa-th-large"></i> Overview</div>
+    <div style="margin-top:2rem; color:#ccc; font-size: 0.8rem;">MENU</div>
+    <div style="color:var(--primary); font-weight:500; font-size: 0.9rem;"><i class="fas fa-th-large"></i> Overview Analysis</div>
 </aside>
 
 <main class="content">
-    <header style="display:flex; justify-content:space-between; margin-bottom:2rem;">
-        <h1>สถิติส่งชาร์ทผู้ป่วย (Analysis)</h1>
-        <select id="monthSelect" onchange="updateView()" style="padding:8px 15px; border-radius:10px; border:1px solid #eee;">
-            <option value="all">ภาพรวมทุกเดือน</option>
+    <header>
+        <h2>วิเคราะห์สถิติชาร์ทผู้ป่วย</h2>
+        <select id="monthSelect" onchange="updateView()" style="padding:5px 12px; border-radius:8px; border:1px solid #eee; font-size: 0.9rem;">
+            <option value="all">ทุกเดือน</option>
         </select>
     </header>
 
     <div class="stat-grid">
-        <div class="card">
-            <small>จำนวนผู้ป่วย</small>
-            <div class="card-val" id="stat-total">-</div>
-        </div>
-        <div class="card">
-            <small>ครบกำหนดส่ง</small>
-            <div class="card-val" id="stat-due">-</div>
-        </div>
-        <div class="card">
-            <small>ยังไม่ครบกำหนด</small>
-            <div class="card-val" id="stat-notDue">-</div>
-        </div>
-        <div class="card" style="background:#f0fff4;">
-            <small>ส่งงานประกันแล้ว</small>
-            <div class="card-val" id="stat-insSent">-</div>
-        </div>
-        <div class="card" style="background:#fff5f5;">
-            <small style="font-size: 0.75rem;">ครบกำหนด/ยังไม่ส่งประกัน</small>
-            <div class="card-val" id="stat-dueNotSent" style="color:#e53e3e;">-</div>
-        </div>
-    </div>
-
-    <div class="chart-main-grid">
-        <div class="chart-card">
-            <h3>สถานะการส่งชาร์ทรายเดือน (Stacked)</h3>
-            <canvas id="barChart"></canvas>
-        </div>
-        <div class="chart-card">
-            <h3>สัดส่วนความรวดเร็วการส่งชาร์ท</h3>
-            <canvas id="pieChart"></canvas>
-        </div>
-    </div>
-
-    <div class="chart-card">
-        <h3>การกระจายของจำนวนวันชาร์ทช้า (Histogram)</h3>
-        <canvas id="histChart" height="100"></canvas>
-    </div>
-</main>
-
-<script>
-    let dbData = null;
-    let bChart, pChart, hChart;
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
-
-    window.onload = () => {
-        fetch(scriptURL).then(r => r.json()).then(data => {
-            dbData = data;
-            document.getElementById('loader').style.display = 'none';
-            const sel = document.getElementById('monthSelect');
-            data.months.forEach(m => {
-                let opt = document.createElement('option');
-                opt.value = m; opt.innerText = m; sel.appendChild(opt);
-            });
-            updateView();
-        });
-    };
-
-    function updateView() {
-        const val = document.getElementById('monthSelect').value;
-        const data = val === 'all' ? dbData.overall : dbData.monthlyDetails[val];
-        
-        document.getElementById('stat-total').innerText = (data.patients || data.total).toLocaleString();
-        document.getElementById('stat-due').innerText = data.due.toLocaleString();
-        document.getElementById('stat-notDue').innerText = data.notDue.toLocaleString();
-        document.getElementById('stat-insSent').innerText = (data.insSent).toLocaleString();
-        document.getElementById('stat-dueNotSent').innerText = data.dueNotSent.toLocaleString();
-
-        renderCharts(val, data);
-    }
-
-    function renderCharts(mode, data) {
-        if (bChart) bChart.destroy();
-        if (pChart) pChart.destroy();
-        if (hChart) hChart.destroy();
-
-        const pastel = { blue: '#AEC6CF', green: '#77DD77', pink: '#FFB7B2', yellow: '#FDFD96', mint: '#B2E2F2' };
-
-        // 1. Stacked Bar Chart
-        bChart = new Chart(document.getElementById('barChart'), {
-            type: 'bar',
-            data: {
-                labels: mode === 'all' ? dbData.months : [mode],
-                datasets: [
-                    { label: 'ส่งชาร์ทแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: pastel.green },
-                    { label: 'ยังไม่ส่งชาร์ท', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insNotSent) : [data.insNotSent], backgroundColor: pastel.pink }
-                ]
-            },
-            options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { tooltip: { enabled: true } } }
-        });
-
-        // 3. Doughnut (On Time vs Late)
-        pChart = new Chart(document.getElementById('pieChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['ทันเวลา', 'ชาร์ทช้า'],
-                datasets: [{ data: [data.onTime, data.late], backgroundColor: [pastel.mint, pastel.pink] }]
-            },
-            options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // 5. Histogram of Late Days
-        const sortedDays = Object.keys(data.lateDaysDist).sort((a,b) => a-b);
-        hChart = new Chart(document.getElementById('histChart'), {
-            type: 'bar',
-            data: {
-                labels: sortedDays.map(d => d + ' วัน'),
-                datasets: [{ label: 'จำนวนชาร์ท', data: sortedDays.map(d => data.lateDaysDist[d]), backgroundColor: pastel.blue }]
-            },
-            options: { plugins: { legend: { display: false } } }
-        });
-    }
-</script>
-</body>
-</html>
+        <div class="card"><small>ผู้ป่วยรวม</small><div class="card-val" id="stat-total">-</div></div>
+        <div class="card"><small>ครบกำหนดส่ง</small><div class="card-val" id="stat-due">-</div></div>
+        <div class="card"><small>ยังไม่
