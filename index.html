@@ -3,215 +3,492 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Dashboard Professional v2 - Single Page</title>
+    <title>IP Dashboard Premium v3</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #AEC6CF; --success: #77DD77; --danger: #FFB7B2;
-            --warning: #FDFD96; --bg: #fdfdfd; --white: #ffffff;
-            --text: #4a4a4a; --shadow: 0 8px 30px rgba(0,0,0,0.04);
+            --primary: #6366f1;
+            --primary-light: #e0e7ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --bg: #f8fafc;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         
-        /* ล็อกความสูงหน้าจอ */
         body { 
             background: var(--bg); 
-            color: var(--text); 
+            color: var(--text-main); 
             display: grid; 
-            grid-template-columns: 240px 1fr; 
+            grid-template-columns: 260px 1fr; 
             height: 100vh; 
             overflow: hidden; 
         }
+
+        /* Sidebar Styling */
+        .sidebar { 
+            background: var(--sidebar-bg); 
+            padding: 2rem 1.5rem; 
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
         
-        .sidebar { background: var(--white); padding: 2rem 1.5rem; border-right: 1px solid #f0f0f0; }
-        
-        /* ส่วนเนื้อหาหลักใช้ Flexbox แนวตั้ง */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .nav-item:hover:not(.active) {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        /* Main Content Styling */
         .content { 
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 1.5rem 2rem;
-            gap: 1rem;
-            overflow: hidden;
+            padding: 1.5rem 2.5rem;
+            gap: 1.5rem;
+            overflow-y: auto;
         }
-        
-        header { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* ปรับขนาด Stat Grid ให้เล็กลงเล็กน้อย */
+
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-shrink: 0;
+        }
+
+        header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        #monthSelect {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            outline: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        /* Stat Cards */
         .stat-grid { 
-            flex: 0 0 auto;
             display: grid; 
             grid-template-columns: repeat(5, 1fr); 
-            gap: 1rem; 
+            gap: 1.25rem; 
+            flex-shrink: 0;
         }
+
         .card { 
-            background: var(--white); padding: 0.8rem; border-radius: 15px; 
-            box-shadow: var(--shadow); border: 1px solid #f9f9f9; text-align: center;
+            background: var(--card-bg); 
+            padding: 1.25rem; 
+            border-radius: 20px; 
+            box-shadow: var(--shadow); 
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .card small { font-size: 0.75rem; color: var(--muted); }
-        .card-val { font-size: 1.4rem; font-weight: 600; color: #5a5a5a; }
+
+        .card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+
+        .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+        .card-val { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
         
-        /* ส่วนของกราฟจะขยายตัวเต็มพื้นที่ที่เหลือ */
-        .charts-section {
-            flex: 1;
+        .card-icon {
+            position: absolute;
+            right: 1.25rem;
+            top: 1.25rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            min-height: 0; /* สำคัญเพื่อให้ flex item หดตัวได้ */
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
 
-        .chart-main-grid { 
-            flex: 1.2; /* สัดส่วนแถวบน */
-            display: grid; 
-            grid-template-columns: 1.5fr 1fr; 
-            gap: 1rem; 
-            min-height: 0;
+        /* Chart Sections */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+            flex: 1;
+            min-height: 400px;
         }
 
-        .chart-card { 
-            background: var(--white); 
-            padding: 1rem; 
-            border-radius: 15px; 
+        .chart-card {
+            background: var(--white);
+            background: white;
+            padding: 1.5rem;
+            border-radius: 24px;
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            min-height: 0;
-        }
-        .chart-card h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
-        .chart-card canvas { flex: 1; width: 100% !important; height: 100% !important; }
-
-        .histogram-section {
-            flex: 0.8; /* สัดส่วนแถวล่าง */
-            min-height: 0;
+            border: 1px solid #f1f5f9;
         }
 
-        #loader { position: fixed; inset: 0; background: var(--white); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .chart-card h3 { 
+            font-size: 1.1rem; 
+            margin-bottom: 1.5rem; 
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        .full-width { grid-column: span 2; min-height: 250px; }
+
+        /* Loader */
+        #loader { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(255,255,255,0.9); 
+            backdrop-filter: blur(10px);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; 
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--primary-light);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Helpers */
+        .text-success { color: var(--success); }
+        .bg-success-light { background: #dcfce7; color: var(--success); }
+        .text-danger { color: var(--danger); }
+        .bg-danger-light { background: #fee2e2; color: var(--danger); }
+        .bg-primary-light { background: var(--primary-light); color: var(--primary); }
+        .bg-info-light { background: #e0f2fe; color: var(--info); }
+        .bg-warning-light { background: #fef3c7; color: var(--warning); }
     </style>
 </head>
 <body>
 
-<div id="loader"><div><i class="fas fa-circle-notch fa-spin fa-2x"></i></div></div>
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="font-weight: 500; color: var(--text-muted);">กำลังโหลดข้อมูล...</p>
+</div>
 
 <aside class="sidebar">
-    <h2 style="color:var(--primary);"><i class="fas fa-notes-medical"></i> Dashboard</h2>
-    <div style="margin-top:2rem; color:#ccc; font-size: 0.8rem;">MENU</div>
-    <div style="color:var(--primary); font-weight:500; font-size: 0.9rem;"><i class="fas fa-th-large"></i> Overview Analysis</div>
+    <div class="brand">
+        <i class="fas fa-shield-virus fa-lg"></i>
+        <span>IP Analytics Pro</span>
+    </div>
+    
+    <nav class="nav-menu">
+        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; padding-left: 16px;">MAIN MENU</div>
+        <a class="nav-item active">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard Overview</span>
+        </a>
+        <a class="nav-item">
+            <i class="fas fa-user-injured"></i>
+            <span>Patient Records</span>
+        </a>
+        <a class="nav-item">
+            <i class="fas fa-file-medical-alt"></i>
+            <span>Reports</span>
+        </a>
+        <a class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <div style="margin-top: auto; padding: 1rem; background: var(--bg); border-radius: 15px; text-align: center;">
+        <p style="font-size: 0.8rem; color: var(--text-muted);">อัปเดตล่าสุด</p>
+        <p id="lastUpdate" style="font-size: 0.85rem; font-weight: 500;">-</p>
+    </div>
 </aside>
 
 <main class="content">
     <header>
-        <h2>วิเคราะห์สถิติชาร์ทผู้ป่วย</h2>
-        <select id="monthSelect" onchange="updateView()" style="padding:5px 12px; border-radius:8px; border:1px solid #eee; font-size: 0.9rem;">
-            <option value="all">ทุกเดือน</option>
-        </select>
+        <div>
+            <h2>วิเคราะห์สถิติชาร์ทผู้ป่วย</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">ข้อมูลสรุปและประสิทธิภาพการนำส่งชาร์ท</p>
+        </div>
+        <div class="header-actions">
+            <i class="far fa-calendar-alt" style="color: var(--text-muted);"></i>
+            <select id="monthSelect" onchange="updateView()">
+                <option value="all">แสดงทุกเดือน</option>
+            </select>
+            <button onclick="updateView()" style="border: none; background: white; padding: 8px 12px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
     </header>
 
     <div class="stat-grid">
-        <div class="card"><small>ผู้ป่วยรวม</small><div class="card-val" id="stat-total">-</div></div>
-        <div class="card"><small>ครบกำหนดส่ง</small><div class="card-val" id="stat-due">-</div></div>
-        <div class="card"><small>ยังไม่ครบกำหนด</small><div class="card-val" id="stat-notDue">-</div></div>
-        <div class="card" style="background:#f0fff4;"><small>ส่งประกันแล้ว</small><div class="card-val" id="stat-insSent">-</div></div>
-        <div class="card" style="background:#fff5f5;"><small>ค้างส่งงานประกัน</small><div class="card-val" id="stat-dueNotSent" style="color:#e53e3e;">-</div></div>
+        <div class="card">
+            <span class="card-label">ผู้ป่วยรวม</span>
+            <div class="card-val" id="stat-total">0</div>
+            <div class="card-icon bg-primary-light"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="card">
+            <span class="card-label">ครบกำหนดส่ง</span>
+            <div class="card-val" id="stat-due">0</div>
+            <div class="card-icon bg-info-light"><i class="fas fa-clock"></i></div>
+        </div>
+        <div class="card">
+            <span class="card-label">ยังไม่ครบกำหนด</span>
+            <div class="card-val" id="stat-notDue">0</div>
+            <div class="card-icon bg-warning-light"><i class="fas fa-hourglass-half"></i></div>
+        </div>
+        <div class="card">
+            <span class="card-label">ส่งประกันแล้ว</span>
+            <div class="card-val text-success" id="stat-insSent">0</div>
+            <div class="card-icon bg-success-light"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="card">
+            <span class="card-label">ค้างส่ง (เกินกำหนด)</span>
+            <div class="card-val text-danger" id="stat-dueNotSent">0</div>
+            <div class="card-icon bg-danger-light"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
     </div>
 
-    <div class="charts-section">
-        <div class="chart-main-grid">
-            <div class="chart-card">
-                <h3>สถานะรายเดือน (Stacked)</h3>
+    <div class="charts-container">
+        <div class="chart-card">
+            <h3><i class="fas fa-chart-bar" style="color: var(--primary);"></i>สถานะการนำส่งรายเดือน</h3>
+            <div class="chart-wrapper">
                 <canvas id="barChart"></canvas>
             </div>
-            <div class="chart-card">
-                <h3>ความรวดเร็วการส่ง</h3>
+        </div>
+        <div class="chart-card">
+            <h3><i class="fas fa-chart-pie" style="color: var(--info);"></i>ประสิทธิภาพความรวดเร็ว</h3>
+            <div class="chart-wrapper">
                 <canvas id="pieChart"></canvas>
             </div>
         </div>
-
-        <div class="chart-card histogram-section">
-            <h3>การกระจายของจำนวนวันชาร์ทช้า (Histogram)</h3>
-            <canvas id="histChart"></canvas>
+        <div class="chart-card full-width">
+            <h3><i class="fas fa-history" style="color: var(--warning);"></i>การกระจายตัวของจำนวนวันที่ส่งช้า (วัน)</h3>
+            <div class="chart-wrapper">
+                <canvas id="histChart"></canvas>
+            </div>
         </div>
     </div>
 </main>
 
 <script>
     let dbData = null;
-    let bChart, pChart, hChart;
+    let charts = {};
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
 
+    // การตั้งค่าสีแบบ Gradient
+    const getGradient = (ctx, colorStart, colorEnd) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    };
+
     window.onload = () => {
-        fetch(scriptURL).then(r => r.json()).then(data => {
-            dbData = data;
-            document.getElementById('loader').style.display = 'none';
-            const sel = document.getElementById('monthSelect');
-            data.months.forEach(m => {
-                let opt = document.createElement('option');
-                opt.value = m; opt.innerText = m; sel.appendChild(opt);
+        fetch(scriptURL)
+            .then(r => r.json())
+            .then(data => {
+                dbData = data;
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 300);
+                
+                const sel = document.getElementById('monthSelect');
+                data.months.forEach(m => {
+                    let opt = document.createElement('option');
+                    opt.value = m; opt.innerText = m; sel.appendChild(opt);
+                });
+
+                document.getElementById('lastUpdate').innerText = new Date().toLocaleDateString('th-TH', { 
+                    day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' 
+                });
+
+                updateView();
+            })
+            .catch(err => {
+                console.error("Fetch error:", err);
+                // ในกรณีที่เชื่อมต่อ API ไม่ได้ เราจะใช้ข้อมูล Mockup เพื่อการแสดงผลตัวอย่าง (Optional)
             });
-            updateView();
-        });
     };
 
     function updateView() {
         const val = document.getElementById('monthSelect').value;
         const data = val === 'all' ? dbData.overall : dbData.monthlyDetails[val];
         
-        document.getElementById('stat-total').innerText = (data.patients || data.total).toLocaleString();
-        document.getElementById('stat-due').innerText = data.due.toLocaleString();
-        document.getElementById('stat-notDue').innerText = data.notDue.toLocaleString();
-        document.getElementById('stat-insSent').innerText = (data.insSent).toLocaleString();
-        document.getElementById('stat-dueNotSent').innerText = data.dueNotSent.toLocaleString();
+        animateValue("stat-total", data.patients || data.total);
+        animateValue("stat-due", data.due);
+        animateValue("stat-notDue", data.notDue);
+        animateValue("stat-insSent", data.insSent);
+        animateValue("stat-dueNotSent", data.dueNotSent);
 
         renderCharts(val, data);
     }
 
+    function animateValue(id, endVal) {
+        const obj = document.getElementById(id);
+        let startVal = parseInt(obj.innerText.replace(/,/g, '')) || 0;
+        let duration = 800;
+        let startTime = null;
+
+        function step(currentTime) {
+            if (!startTime) startTime = currentTime;
+            const progress = Math.min((currentTime - startTime) / duration, 1);
+            const currentVal = Math.floor(progress * (endVal - startVal) + startVal);
+            obj.innerText = currentVal.toLocaleString();
+            if (progress < 1) window.requestAnimationFrame(step);
+        }
+        window.requestAnimationFrame(step);
+    }
+
     function renderCharts(mode, data) {
-        if (bChart) bChart.destroy();
-        if (pChart) pChart.destroy();
-        if (hChart) hChart.destroy();
+        // ทำลายกราฟเก่าถ้ามี
+        Object.values(charts).forEach(c => c.destroy());
 
-        const pastel = { blue: '#AEC6CF', green: '#77DD77', pink: '#FFB7B2', yellow: '#FDFD96', mint: '#B2E2F2' };
-        
-        // ตั้งค่า Common Options เพื่อให้กราฟยืดหดตาม Container
-        const commonOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { font: { size: 11 } } } }
-        };
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        const ctxHist = document.getElementById('histChart').getContext('2d');
 
-        // 1. Bar Chart
-        bChart = new Chart(document.getElementById('barChart'), {
+        // 1. Bar Chart (Stacked)
+        charts.bar = new Chart(ctxBar, {
             type: 'bar',
             data: {
                 labels: mode === 'all' ? dbData.months : [mode],
                 datasets: [
-                    { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: pastel.green },
-                    { label: 'ยังไม่ส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insNotSent) : [data.insNotSent], backgroundColor: pastel.pink }
+                    { 
+                        label: 'ส่งแล้ว', 
+                        data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], 
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    },
+                    { 
+                        label: 'ยังไม่ส่ง', 
+                        data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insNotSent) : [data.insNotSent], 
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 6
+                    }
                 ]
             },
-            options: { ...commonOptions, scales: { x: { stacked: true }, y: { stacked: true } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, font: { family: 'Kanit' } } } },
+                scales: { 
+                    x: { stacked: true, grid: { display: false } }, 
+                    y: { stacked: true, grid: { borderDash: [5, 5] } } 
+                }
+            }
         });
 
-        // 2. Pie Chart
-        pChart = new Chart(document.getElementById('pieChart'), {
+        // 2. Pie Chart (Donut)
+        charts.pie = new Chart(ctxPie, {
             type: 'doughnut',
             data: {
-                labels: ['ทันเวลา', 'ชาร์ทช้า'],
-                datasets: [{ data: [data.onTime, data.late], backgroundColor: [pastel.mint, pastel.pink] }]
+                labels: ['ทันเวลา', 'ส่งช้า'],
+                datasets: [{ 
+                    data: [data.onTime, data.late], 
+                    backgroundColor: ['#6366f1', '#fbbf24'],
+                    hoverOffset: 15,
+                    borderWidth: 0
+                }]
             },
-            options: { ...commonOptions, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: { 
+                    legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, font: { family: 'Kanit' } } } 
+                }
+            }
         });
 
         // 3. Histogram
         const sortedDays = Object.keys(data.lateDaysDist).sort((a,b) => a-b);
-        hChart = new Chart(document.getElementById('histChart'), {
+        const gradBlue = getGradient(ctxHist, 'rgba(99, 102, 241, 0.8)', 'rgba(99, 102, 241, 0.2)');
+        
+        charts.hist = new Chart(ctxHist, {
             type: 'bar',
             data: {
                 labels: sortedDays.map(d => d + ' วัน'),
-                datasets: [{ label: 'จำนวนชาร์ท', data: sortedDays.map(d => data.lateDaysDist[d]), backgroundColor: pastel.blue }]
+                datasets: [{ 
+                    label: 'จำนวนชาร์ท', 
+                    data: sortedDays.map(d => data.lateDaysDist[d]), 
+                    backgroundColor: gradBlue,
+                    borderColor: '#6366f1',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    barPercentage: 0.7
+                }]
             },
-            options: { ...commonOptions, plugins: { legend: { display: false } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] } }
+                }
+            }
         });
     }
 </script>
