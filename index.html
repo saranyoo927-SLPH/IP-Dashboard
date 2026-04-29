@@ -128,14 +128,13 @@
             align-items: center;
         }
 
-        #monthSelect {
+        select, input[type="text"] {
             padding: 8px 16px;
             border-radius: 10px;
             border: 1px solid #e2e8f0;
             background: white;
             outline: none;
             font-size: 0.9rem;
-            cursor: pointer;
             box-shadow: var(--shadow);
         }
 
@@ -396,7 +395,7 @@
         </div>
     </section>
 
-    <!-- SECTION 2: PATIENT RECORDS (LIVE DATA) -->
+    <!-- SECTION 2: PATIENT RECORDS (FIXED) -->
     <section id="view-patients" class="view-section">
         <header>
             <div>
@@ -404,9 +403,15 @@
                 <p style="color: var(--text-muted); font-size: 0.9rem;">ดึงข้อมูลโดยตรงจาก Google Sheet</p>
             </div>
             <div class="header-actions">
-                <input type="text" id="patientSearch" placeholder="ค้นหาชื่อ HN หรือ AN..." onkeyup="filterPatientTable()" style="padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; width: 250px;">
-                <button class="bg-primary-light" style="border: none; padding: 8px 16px; border-radius: 10px; font-weight: 500; cursor: pointer;">
-                    <i class="fas fa-filter"></i> ตัวกรอง
+                <input type="text" id="patientSearch" placeholder="ค้นหาชื่อ HN หรือ AN..." onkeyup="filterPatientTable()" style="width: 250px;">
+                <select id="statusFilter" onchange="updateView()" style="box-shadow: var(--shadow);">
+                    <option value="all">ทุกสถานะ</option>
+                    <option value="ส่งแล้ว">ส่งแล้ว</option>
+                    <option value="เกินกำหนด">เกินกำหนด</option>
+                    <option value="รอส่ง">รอส่ง</option>
+                </select>
+                <button onclick="refreshData()" style="border: none; background: white; padding: 8px 12px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);">
+                    <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
         </header>
@@ -484,12 +489,15 @@
         element.classList.add('active');
         document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
         document.getElementById('view-' + viewId).classList.add('active');
+        
+        // ถ้าสลับกลับมา Dashboard ให้รีเซ็ตกราฟ (แก้ไขปัญหา Chart ไม่แสดงหลังสลับหน้า)
+        if (viewId === 'dashboard') updateView();
     }
 
     // 2. ฟังก์ชันปกปิดนามสกุล
     function maskName(fullName) {
         if (!fullName) return "-";
-        const parts = fullName.split(' ');
+        const parts = fullName.trim().split(/\s+/);
         if (parts.length < 2) return fullName;
         const firstName = parts[0];
         const lastNameFirstChar = parts[1].charAt(0);
@@ -498,20 +506,28 @@
 
     // 3. ฟังก์ชันดึงข้อมูลจาก GAS
     async function fetchData() {
-        document.getElementById('loader').style.display = 'flex';
-        document.getElementById('loader').style.opacity = '1';
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
         
         try {
             const response = await fetch(scriptURL);
+            if (!response.ok) throw new Error('Network response was not ok');
             dbData = await response.json();
             
             // อัปเดตเมนูเลือกเดือน
             const sel = document.getElementById('monthSelect');
+            const currentVal = sel.value;
             sel.innerHTML = '<option value="all">แสดงทุกเดือน</option>';
-            dbData.months.forEach(m => {
-                let opt = document.createElement('option');
-                opt.value = m; opt.innerText = m; sel.appendChild(opt);
-            });
+            if (dbData.months) {
+                dbData.months.forEach(m => {
+                    let opt = document.createElement('option');
+                    opt.value = m; opt.innerText = m; sel.appendChild(opt);
+                });
+            }
+            if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+                sel.value = currentVal;
+            }
 
             document.getElementById('lastUpdate').innerText = new Date().toLocaleDateString('th-TH', { 
                 day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' 
@@ -519,11 +535,11 @@
 
             updateView();
             
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 300);
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 300);
         } catch (error) {
             console.error("Error loading data:", error);
-            // แจ้งเตือนข้อผิดพลาด
+            loader.innerHTML = `<div style="text-align:center;"><i class="fas fa-exclamation-triangle fa-2x text-danger"></i><p style="margin-top:10px;">เกิดข้อผิดพลาดในการดึงข้อมูล<br><small>${error.message}</small></p><button onclick="location.reload()" style="margin-top:10px; padding:5px 15px; cursor:pointer;">ลองอีกครั้ง</button></div>`;
         }
     }
 
@@ -536,58 +552,86 @@
     // 4. อัปเดตข้อมูลในหน้า Dashboard และตารางรายชื่อ
     function updateView() {
         if (!dbData) return;
-        const val = document.getElementById('monthSelect').value;
-        const data = val === 'all' ? dbData.overall : dbData.monthlyDetails[val];
+        const monthVal = document.getElementById('monthSelect').value;
+        const statusVal = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : 'all';
         
-        // อัปเดตตัวเลข Stats
-        animateValue("stat-total", data.patients || data.total);
-        animateValue("stat-due", data.due);
-        animateValue("stat-notDue", data.notDue);
-        animateValue("stat-insSent", data.insSent);
-        animateValue("stat-dueNotSent", data.dueNotSent);
-
-        // อัปเดตกราฟ
-        renderCharts(val, data);
+        const data = monthVal === 'all' ? dbData.overall : dbData.monthlyDetails[monthVal];
         
-        // อัปเดตตารางรายชื่อผู้ป่วย (ดึงจาก rawData)
-        renderPatientTable(val);
+        if (data) {
+            animateValue("stat-total", data.patients || data.total || 0);
+            animateValue("stat-due", data.due || 0);
+            animateValue("stat-notDue", data.notDue || 0);
+            animateValue("stat-insSent", data.insSent || 0);
+            animateValue("stat-dueNotSent", data.dueNotSent || 0);
+            renderCharts(monthVal, data);
+        }
+        
+        renderPatientTable(monthVal, statusVal);
     }
 
-    // 5. ฟังก์ชันสร้างตารางรายชื่อผู้ป่วยจากข้อมูลจริง
-    function renderPatientTable(monthFilter) {
+    // 5. ฟังก์ชันสร้างตารางรายชื่อผู้ป่วย (แก้ไขให้ดึง Key ได้ยืดหยุ่น)
+    function renderPatientTable(monthFilter, statusFilter) {
         const tbody = document.getElementById('patientTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         
-        // ตรวจสอบว่ามี rawData หรือไม่ (ถ้าไม่มีจะใช้ข้อมูลจำลองที่ตรงโครงสร้าง)
-        const list = dbData.rawData || [];
+        let list = dbData.rawData || [];
         
-        const filteredList = monthFilter === 'all' 
+        // กรองตามเดือน
+        let filteredList = monthFilter === 'all' 
             ? list 
-            : list.filter(p => p.month === monthFilter);
+            : list.filter(p => (p.month || p.Month) === monthFilter);
+
+        // กรองตามสถานะ
+        if (statusFilter !== 'all') {
+            filteredList = filteredList.filter(p => {
+                const s = (p.status || p.Status || "").trim();
+                if (statusFilter === 'เกินกำหนด') return s === 'ยังไม่ส่ง' && (p.lateDays || p.LateDays || 0) > 10;
+                if (statusFilter === 'รอส่ง') return s === 'ยังไม่ส่ง' && (p.lateDays || p.LateDays || 0) <= 10;
+                return s === statusFilter;
+            });
+        }
 
         if (filteredList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">ไม่พบข้อมูลในช่วงที่เลือก</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--text-muted);">
+                <i class="fas fa-folder-open fa-2x" style="opacity:0.3; margin-bottom:10px;"></i><br>
+                ไม่พบข้อมูลในช่วงที่เลือก หรือ โครงสร้างข้อมูลไม่ถูกต้อง
+            </td></tr>`;
             return;
         }
 
         filteredList.forEach(p => {
             const tr = document.createElement('tr');
             
-            // Logic สถานะ
+            // Map Key (Case-insensitive)
+            const hn = p.hn || p.HN || "-";
+            const an = p.an || p.AN || "-";
+            const name = p.name || p.Name || p.PatientName || "-";
+            const adate = p.admitDate || p.AdmitDate || "-";
+            const ddate = p.dcDate || p.DCDate || "-";
+            const priv = p.privilege || p.Privilege || p.Rights || "-";
+            const ldays = parseInt(p.lateDays || p.LateDays || 0);
+            const status = p.status || p.Status || "ยังไม่ส่ง";
+
+            // Logic สถานะ Badge
             let statusBadge = '';
-            if (p.status === 'ส่งแล้ว') statusBadge = `<span class="badge bg-success-light">ส่งแล้ว</span>`;
-            else if (p.lateDays > 10) statusBadge = `<span class="badge bg-danger-light">เกินกำหนด</span>`;
-            else statusBadge = `<span class="badge bg-warning-light">รอส่ง</span>`;
+            if (status === 'ส่งแล้ว') {
+                statusBadge = `<span class="badge bg-success-light">ส่งแล้ว</span>`;
+            } else if (ldays > 10) {
+                statusBadge = `<span class="badge bg-danger-light">เกินกำหนด</span>`;
+            } else {
+                statusBadge = `<span class="badge bg-warning-light">รอส่ง</span>`;
+            }
 
             tr.innerHTML = `
-                <td><strong>${p.hn || '-'}</strong></td>
-                <td>${p.an || '-'}</td>
-                <td>${maskName(p.name)}</td>
-                <td>${p.admitDate || '-'}</td>
-                <td>${p.dcDate || '-'}</td>
-                <td>${p.privilege || '-'}</td>
+                <td><strong>${hn}</strong></td>
+                <td>${an}</td>
+                <td>${maskName(name)}</td>
+                <td>${adate}</td>
+                <td>${ddate}</td>
+                <td>${priv}</td>
                 <td>${statusBadge}</td>
-                <td class="${p.lateDays > 10 ? 'text-danger' : ''}">${p.lateDays || 0} วัน</td>
+                <td class="${ldays > 10 ? 'text-danger' : ''}">${ldays} วัน</td>
             `;
             tbody.appendChild(tr);
         });
@@ -597,10 +641,10 @@
     function filterPatientTable() {
         const input = document.getElementById("patientSearch");
         const filter = input.value.toLowerCase();
-        const table = document.getElementById("patientTable");
-        const tr = table.getElementsByTagName("tr");
+        const tableBody = document.getElementById("patientTableBody");
+        const tr = tableBody.getElementsByTagName("tr");
 
-        for (let i = 1; i < tr.length; i++) {
+        for (let i = 0; i < tr.length; i++) {
             let found = false;
             let tds = tr[i].getElementsByTagName("td");
             for(let j = 0; j < tds.length; j++) {
@@ -638,6 +682,7 @@
     };
 
     function renderCharts(mode, data) {
+        if (!document.getElementById('barChart')) return;
         Object.values(charts).forEach(c => c.destroy());
 
         const ctxBar = document.getElementById('barChart').getContext('2d');
@@ -647,7 +692,7 @@
         charts.bar = new Chart(ctxBar, {
             type: 'bar',
             data: {
-                labels: mode === 'all' ? dbData.months : [mode],
+                labels: mode === 'all' ? (dbData.months || []) : [mode],
                 datasets: [
                     { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981', borderRadius: 6 },
                     { label: 'ยังไม่ส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insNotSent) : [data.insNotSent], backgroundColor: '#f43f5e', borderRadius: 6 }
@@ -665,7 +710,7 @@
             type: 'doughnut',
             data: {
                 labels: ['ทันเวลา', 'ส่งช้า'],
-                datasets: [{ data: [data.onTime, data.late], backgroundColor: ['#6366f1', '#fbbf24'], hoverOffset: 15, borderWidth: 0 }]
+                datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#fbbf24'], hoverOffset: 15, borderWidth: 0 }]
             },
             options: {
                 responsive: true,
@@ -675,13 +720,14 @@
             }
         });
 
-        const sortedDays = Object.keys(data.lateDaysDist).sort((a,b) => a-b);
+        const dist = data.lateDaysDist || {};
+        const sortedDays = Object.keys(dist).sort((a,b) => a-b);
         const gradBlue = getGradient(ctxHist, 'rgba(99, 102, 241, 0.8)', 'rgba(99, 102, 241, 0.2)');
         charts.hist = new Chart(ctxHist, {
             type: 'bar',
             data: {
                 labels: sortedDays.map(d => d + ' วัน'),
-                datasets: [{ label: 'จำนวนชาร์ท', data: sortedDays.map(d => data.lateDaysDist[d]), backgroundColor: gradBlue, borderColor: '#6366f1', borderWidth: 1, borderRadius: 8 }]
+                datasets: [{ label: 'จำนวนชาร์ท', data: sortedDays.map(d => dist[d]), backgroundColor: gradBlue, borderColor: '#6366f1', borderWidth: 1, borderRadius: 8 }]
             },
             options: {
                 responsive: true,
