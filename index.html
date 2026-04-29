@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Dashboard Premium v3 - Multi-View</title>
+    <title>IP Dashboard Premium v3 - Live Data</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -291,7 +291,7 @@
 
 <div id="loader">
     <div class="spinner"></div>
-    <p style="font-weight: 500; color: var(--text-muted);">กำลังโหลดข้อมูล...</p>
+    <p style="font-weight: 500; color: var(--text-muted);">กำลังโหลดข้อมูลจาก Google Sheet...</p>
 </div>
 
 <aside class="sidebar">
@@ -340,7 +340,7 @@
                 <select id="monthSelect" onchange="updateView()">
                     <option value="all">แสดงทุกเดือน</option>
                 </select>
-                <button onclick="updateView()" style="border: none; background: white; padding: 8px 12px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);">
+                <button onclick="refreshData()" style="border: none; background: white; padding: 8px 12px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
@@ -396,15 +396,15 @@
         </div>
     </section>
 
-    <!-- SECTION 2: PATIENT RECORDS (UPDATED) -->
+    <!-- SECTION 2: PATIENT RECORDS (LIVE DATA) -->
     <section id="view-patients" class="view-section">
         <header>
             <div>
-                <h2>รายการข้อมูลผู้ป่วย</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">ดูและค้นหาข้อมูลการนำส่งชาร์ทรายบุคคล</p>
+                <h2>รายการข้อมูลผู้ป่วย (Real-time)</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">ดึงข้อมูลโดยตรงจาก Google Sheet</p>
             </div>
             <div class="header-actions">
-                <input type="text" placeholder="ค้นหาชื่อ HN หรือ AN..." style="padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; width: 250px;">
+                <input type="text" id="patientSearch" placeholder="ค้นหาชื่อ HN หรือ AN..." onkeyup="filterPatientTable()" style="padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; width: 250px;">
                 <button class="bg-primary-light" style="border: none; padding: 8px 16px; border-radius: 10px; font-weight: 500; cursor: pointer;">
                     <i class="fas fa-filter"></i> ตัวกรอง
                 </button>
@@ -412,60 +412,21 @@
         </header>
 
         <div class="data-table-container">
-            <table>
+            <table id="patientTable">
                 <thead>
                     <tr>
                         <th>HN</th>
                         <th>AN</th>
                         <th>ชื่อ-นามสกุล</th>
-                        <th>วันที่รับเข้า (Admit)</th>
-                        <th>วันที่จำหน่าย (DC)</th>
+                        <th>วันที่ Admit</th>
+                        <th>วันที่ DC</th>
                         <th>สิทธิการรักษา</th>
                         <th>สถานะชาร์ท</th>
-                        <th>จำนวนวันค้าง</th>
+                        <th>วันค้าง</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>67-00123</strong></td>
-                        <td>670001</td>
-                        <td>นายสมชาย สายXX</td>
-                        <td>10 เม.ย. 69</td>
-                        <td>12 เม.ย. 69</td>
-                        <td>ประกันสังคม</td>
-                        <td><span class="badge bg-success-light">ส่งแล้ว</span></td>
-                        <td>0 วัน</td>
-                    </tr>
-                    <tr>
-                        <td><strong>67-00456</strong></td>
-                        <td>670042</td>
-                        <td>นางสาววารี มีXX</td>
-                        <td>01 เม.ย. 69</td>
-                        <td>05 เม.ย. 69</td>
-                        <td>จ่ายตรง</td>
-                        <td><span class="badge bg-danger-light">เกินกำหนด</span></td>
-                        <td class="text-danger">15 วัน</td>
-                    </tr>
-                    <tr>
-                        <td><strong>67-00890</strong></td>
-                        <td>670105</td>
-                        <td>เด็กชายก้องไกล ใจXX</td>
-                        <td>15 เม.ย. 69</td>
-                        <td>18 เม.ย. 69</td>
-                        <td>บัตรทอง</td>
-                        <td><span class="badge bg-warning-light">รอส่ง</span></td>
-                        <td>5 วัน</td>
-                    </tr>
-                    <tr>
-                        <td><strong>67-01022</strong></td>
-                        <td>670150</td>
-                        <td>นางมาลี รัตน์XX</td>
-                        <td>20 เม.ย. 69</td>
-                        <td>25 เม.ย. 69</td>
-                        <td>ประกันสังคม</td>
-                        <td><span class="badge bg-success-light">ส่งแล้ว</span></td>
-                        <td>1 วัน</td>
-                    </tr>
+                <tbody id="patientTableBody">
+                    <!-- ข้อมูลจะถูกเติมด้วย JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -517,7 +478,7 @@
     let charts = {};
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
 
-    // ระบบสลับหน้า
+    // 1. ฟังก์ชันสลับหน้า
     function switchView(viewId, element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
@@ -525,46 +486,131 @@
         document.getElementById('view-' + viewId).classList.add('active');
     }
 
-    const getGradient = (ctx, colorStart, colorEnd) => {
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, colorStart);
-        gradient.addColorStop(1, colorEnd);
-        return gradient;
-    };
+    // 2. ฟังก์ชันปกปิดนามสกุล
+    function maskName(fullName) {
+        if (!fullName) return "-";
+        const parts = fullName.split(' ');
+        if (parts.length < 2) return fullName;
+        const firstName = parts[0];
+        const lastNameFirstChar = parts[1].charAt(0);
+        return `${firstName} ${lastNameFirstChar}XX`;
+    }
 
-    window.onload = () => {
-        fetch(scriptURL)
-            .then(r => r.json())
-            .then(data => {
-                dbData = data;
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 300);
-                
-                const sel = document.getElementById('monthSelect');
-                data.months.forEach(m => {
-                    let opt = document.createElement('option');
-                    opt.value = m; opt.innerText = m; sel.appendChild(opt);
-                });
-
-                document.getElementById('lastUpdate').innerText = new Date().toLocaleDateString('th-TH', { 
-                    day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' 
-                });
-
-                updateView();
+    // 3. ฟังก์ชันดึงข้อมูลจาก GAS
+    async function fetchData() {
+        document.getElementById('loader').style.display = 'flex';
+        document.getElementById('loader').style.opacity = '1';
+        
+        try {
+            const response = await fetch(scriptURL);
+            dbData = await response.json();
+            
+            // อัปเดตเมนูเลือกเดือน
+            const sel = document.getElementById('monthSelect');
+            sel.innerHTML = '<option value="all">แสดงทุกเดือน</option>';
+            dbData.months.forEach(m => {
+                let opt = document.createElement('option');
+                opt.value = m; opt.innerText = m; sel.appendChild(opt);
             });
-    };
 
+            document.getElementById('lastUpdate').innerText = new Date().toLocaleDateString('th-TH', { 
+                day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' 
+            });
+
+            updateView();
+            
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 300);
+        } catch (error) {
+            console.error("Error loading data:", error);
+            // แจ้งเตือนข้อผิดพลาด
+        }
+    }
+
+    function refreshData() {
+        fetchData();
+    }
+
+    window.onload = fetchData;
+
+    // 4. อัปเดตข้อมูลในหน้า Dashboard และตารางรายชื่อ
     function updateView() {
+        if (!dbData) return;
         const val = document.getElementById('monthSelect').value;
         const data = val === 'all' ? dbData.overall : dbData.monthlyDetails[val];
         
+        // อัปเดตตัวเลข Stats
         animateValue("stat-total", data.patients || data.total);
         animateValue("stat-due", data.due);
         animateValue("stat-notDue", data.notDue);
         animateValue("stat-insSent", data.insSent);
         animateValue("stat-dueNotSent", data.dueNotSent);
 
+        // อัปเดตกราฟ
         renderCharts(val, data);
+        
+        // อัปเดตตารางรายชื่อผู้ป่วย (ดึงจาก rawData)
+        renderPatientTable(val);
+    }
+
+    // 5. ฟังก์ชันสร้างตารางรายชื่อผู้ป่วยจากข้อมูลจริง
+    function renderPatientTable(monthFilter) {
+        const tbody = document.getElementById('patientTableBody');
+        tbody.innerHTML = '';
+        
+        // ตรวจสอบว่ามี rawData หรือไม่ (ถ้าไม่มีจะใช้ข้อมูลจำลองที่ตรงโครงสร้าง)
+        const list = dbData.rawData || [];
+        
+        const filteredList = monthFilter === 'all' 
+            ? list 
+            : list.filter(p => p.month === monthFilter);
+
+        if (filteredList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">ไม่พบข้อมูลในช่วงที่เลือก</td></tr>';
+            return;
+        }
+
+        filteredList.forEach(p => {
+            const tr = document.createElement('tr');
+            
+            // Logic สถานะ
+            let statusBadge = '';
+            if (p.status === 'ส่งแล้ว') statusBadge = `<span class="badge bg-success-light">ส่งแล้ว</span>`;
+            else if (p.lateDays > 10) statusBadge = `<span class="badge bg-danger-light">เกินกำหนด</span>`;
+            else statusBadge = `<span class="badge bg-warning-light">รอส่ง</span>`;
+
+            tr.innerHTML = `
+                <td><strong>${p.hn || '-'}</strong></td>
+                <td>${p.an || '-'}</td>
+                <td>${maskName(p.name)}</td>
+                <td>${p.admitDate || '-'}</td>
+                <td>${p.dcDate || '-'}</td>
+                <td>${p.privilege || '-'}</td>
+                <td>${statusBadge}</td>
+                <td class="${p.lateDays > 10 ? 'text-danger' : ''}">${p.lateDays || 0} วัน</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 6. ฟังก์ชันค้นหาในตาราง
+    function filterPatientTable() {
+        const input = document.getElementById("patientSearch");
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById("patientTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let found = false;
+            let tds = tr[i].getElementsByTagName("td");
+            for(let j = 0; j < tds.length; j++) {
+                if (tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            tr[i].style.display = found ? "" : "none";
+        }
     }
 
     function animateValue(id, endVal) {
@@ -583,6 +629,13 @@
         }
         window.requestAnimationFrame(step);
     }
+
+    const getGradient = (ctx, colorStart, colorEnd) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    };
 
     function renderCharts(mode, data) {
         Object.values(charts).forEach(c => c.destroy());
