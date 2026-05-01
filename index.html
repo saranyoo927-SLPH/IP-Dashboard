@@ -9,275 +9,62 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-light: #e0e7ff;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --bg: #f8fafc;
-            --sidebar-bg: #ffffff;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
+            --primary: #6366f1; --primary-light: #e0e7ff;
+            --success: #10b981; --danger: #ef4444;
+            --warning: #f59e0b; --info: #3b82f6;
+            --bg: #f8fafc; --sidebar-bg: #ffffff; --card-bg: #ffffff;
+            --text-main: #1e293b; --text-muted: #64748b;
             --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); display: grid; grid-template-columns: 260px 1fr; height: 100vh; overflow: hidden; }
         
-        body { 
-            background: var(--bg); 
-            color: var(--text-main); 
-            display: grid; 
-            grid-template-columns: 260px 1fr; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
+        .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 2rem; }
+        .brand { display: flex; align-items: center; gap: 12px; color: var(--primary); font-size: 1.25rem; font-weight: 600; }
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; }
+        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; }
+        .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+        .nav-item:hover:not(.active) { background: #f1f5f9; color: var(--text-main); }
 
-        /* Sidebar Styling */
-        .sidebar { 
-            background: var(--sidebar-bg); 
-            padding: 2rem 1.5rem; 
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--primary);
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .nav-item {
-            padding: 12px 16px;
-            border-radius: 12px;
-            color: var(--text-muted);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-size: 1rem;
-            width: 100%;
-            text-align: left;
-        }
-
-        .nav-item.active {
-            background: var(--primary-light);
-            color: var(--primary);
-            font-weight: 500;
-        }
-
-        .nav-item:hover:not(.active) {
-            background: #f1f5f9;
-            color: var(--text-main);
-        }
-
-        /* Main Content Styling */
-        .content { 
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem 2.5rem;
-            gap: 1.5rem;
-            overflow-y: auto;
-        }
-
-        /* View Sections */
-        .view-section {
-            display: none;
-            flex-direction: column;
-            gap: 1.5rem;
-            animation: fadeIn 0.3s ease-out;
-        }
-
+        .content { height: 100vh; display: flex; flex-direction: column; padding: 1.5rem 2.5rem; gap: 1.5rem; overflow-y: auto; }
+        .view-section { display: none; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.3s ease-out; }
         .view-section.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            flex-shrink: 0;
-        }
-
+        header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; }
-
-        .header-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        select, input[type="text"] {
-            padding: 8px 16px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            outline: none;
-            font-size: 0.9rem;
-            box-shadow: var(--shadow);
-            transition: border-color 0.2s;
-        }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        select, input[type="text"] { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; outline: none; font-size: 0.9rem; box-shadow: var(--shadow); transition: border-color 0.2s; }
         select:focus, input[type="text"]:focus { border-color: var(--primary); }
 
-        /* Stat Cards */
-        .stat-grid { 
-            display: grid; 
-            grid-template-columns: repeat(5, 1fr); 
-            gap: 1.25rem; 
-            flex-shrink: 0;
-        }
-
-        .card { 
-            background: var(--card-bg); 
-            padding: 1.25rem; 
-            border-radius: 20px; 
-            box-shadow: var(--shadow); 
-            border: 1px solid rgba(255,255,255,0.8);
-            position: relative;
-            overflow: hidden;
-        }
-
+        .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; flex-shrink: 0; }
+        .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); position: relative; overflow: hidden; }
         .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
         .card-val { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
-        
-        .card-icon {
-            position: absolute;
-            right: 1rem;
-            top: 1rem;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
+        .card-icon { position: absolute; right: 1rem; top: 1rem; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
 
-        /* Charts */
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 1.5rem;
-            flex: 1;
-            min-height: 400px;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #f1f5f9;
-        }
-
-        .chart-card h3 { 
-            font-size: 1rem; 
-            margin-bottom: 1.25rem; 
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .charts-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; flex: 1; min-height: 400px; }
+        .chart-card { background: white; padding: 1.5rem; border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; border: 1px solid #f1f5f9; }
+        .chart-card h3 { font-size: 1rem; margin-bottom: 1.25rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .chart-wrapper { flex: 1; position: relative; min-height: 300px; }
-
         .full-width { grid-column: span 2; min-height: 300px; }
 
-        /* Table */
-        .data-table-container {
-            background: white;
-            padding: 0.5rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            overflow-x: auto;
-            border: 1px solid #f1f5f9;
-        }
-
+        .data-table-container { background: white; padding: 0.5rem; border-radius: 20px; box-shadow: var(--shadow); overflow-x: auto; border: 1px solid #f1f5f9; }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
-
-        th {
-            text-align: left;
-            padding: 14px 16px;
-            background: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.85rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
+        th { text-align: left; padding: 14px 16px; background: #f8fafc; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; }
         td { padding: 14px 16px; border-bottom: 1px solid #f8fafc; font-size: 0.9rem; }
         tr:hover td { background: #fcfdfe; }
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; display: inline-block; }
 
-        .badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            white-space: nowrap;
-            display: inline-block;
-        }
-
-        /* Loader Overlay */
-        #loader { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(255,255,255,0.95); 
-            backdrop-filter: blur(4px);
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 9999; 
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .spinner {
-            width: 45px;
-            height: 45px;
-            border: 4px solid var(--primary-light);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-
+        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 15px; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Empty State */
-        .empty-state {
-            padding: 4rem;
-            text-align: center;
-            color: var(--text-muted);
-        }
+        .empty-state { padding: 4rem; text-align: center; color: var(--text-muted); }
         .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.2; }
 
-        /* Utilities */
-        .text-success { color: var(--success); }
-        .bg-success-light { background: #dcfce7; color: var(--success); }
-        .text-danger { color: var(--danger); }
-        .bg-danger-light { background: #fee2e2; color: var(--danger); }
+        .text-success { color: var(--success); } .bg-success-light { background: #dcfce7; color: var(--success); }
+        .text-danger { color: var(--danger); } .bg-danger-light { background: #fee2e2; color: var(--danger); }
         .bg-primary-light { background: var(--primary-light); color: var(--primary); }
         .bg-info-light { background: #e0f2fe; color: var(--info); }
         .bg-warning-light { background: #fef3c7; color: var(--warning); }
@@ -285,235 +72,122 @@
 </head>
 <body>
 
-<div id="loader">
-    <div class="spinner"></div>
-    <p style="font-weight: 500; color: var(--text-muted); font-size: 0.95rem;">กำลังซิงค์ข้อมูลล่าสุด...</p>
-</div>
+<div id="loader"><div class="spinner"></div><p style="font-weight: 500; color: var(--text-muted);">กำลังซิงค์ข้อมูลล่าสุด...</p></div>
 
 <aside class="sidebar">
-    <div class="brand">
-        <i class="fas fa-notes-medical fa-lg"></i>
-        <span>IP Analytics Pro</span>
-    </div>
-    
+    <div class="brand"><i class="fas fa-notes-medical fa-lg"></i><span>IP Analytics Pro</span></div>
     <nav class="nav-menu">
         <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; padding-left: 16px; letter-spacing: 1px;">MAIN MENU</div>
-        <button class="nav-item active" onclick="switchView('dashboard', this)">
-            <i class="fas fa-chart-pie"></i>
-            <span>Dashboard Overview</span>
-        </button>
-        <button class="nav-item" onclick="switchView('patients', this)">
-            <i class="fas fa-id-card"></i>
-            <span>Patient Records</span>
-        </button>
-        <button class="nav-item" onclick="switchView('reports', this)">
-            <i class="fas fa-file-invoice"></i>
-            <span>Reports</span>
-        </button>
-        <button class="nav-item" onclick="switchView('settings', this)">
-            <i class="fas fa-sliders-h"></i>
-            <span>Settings</span>
-        </button>
+        <button class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard Overview</span></button>
+        <button class="nav-item" onclick="switchView('patients', this)"><i class="fas fa-id-card"></i><span>Patient Records</span></button>
+        <button class="nav-item" onclick="switchView('reports', this)"><i class="fas fa-file-invoice"></i><span>Reports</span></button>
+        <button class="nav-item" onclick="switchView('settings', this)"><i class="fas fa-sliders-h"></i><span>Settings</span></button>
     </nav>
-
     <div style="margin-top: auto; padding: 1.25rem; background: var(--bg); border-radius: 16px; text-align: center; border: 1px solid #f1f5f9;">
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">อัปเดตข้อมูลล่าสุด</p>
         <p id="lastUpdate" style="font-size: 0.85rem; font-weight: 600;">-</p>
-        <button onclick="refreshData()" style="margin-top: 10px; font-size: 0.75rem; color: var(--primary); background: transparent; border: none; cursor: pointer; text-decoration: underline;">
-            กดรีเฟรชตอนนี้
-        </button>
+        <button onclick="refreshData()" style="margin-top: 10px; font-size: 0.75rem; color: var(--primary); background: transparent; border: none; cursor: pointer; text-decoration: underline;">กดรีเฟรชตอนนี้</button>
     </div>
 </aside>
 
 <main class="content">
     
-    <!-- VIEW: DASHBOARD -->
     <section id="view-dashboard" class="view-section active">
         <header>
-            <div>
-                <h2>วิเคราะห์สถิติภาพรวม</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">สรุปประสิทธิภาพการนำส่งชาร์ทผู้ป่วยใน</p>
-            </div>
+            <div><h2>วิเคราะห์สถิติภาพรวม</h2><p style="color: var(--text-muted); font-size: 0.85rem;">สรุปประสิทธิภาพการนำส่งชาร์ทผู้ป่วยใน</p></div>
             <div class="header-actions">
-                <select id="monthSelect" onchange="updateView()">
-                    <option value="all">แสดงข้อมูลทุกเดือน</option>
-                </select>
-                <button onclick="refreshData()" style="border: none; background: white; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow); color: var(--text-muted);">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
+                <select id="monthSelect" onchange="updateView()"><option value="all">แสดงข้อมูลทุกเดือน</option></select>
+                <button onclick="refreshData()" style="border: none; background: white; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);"><i class="fas fa-sync-alt"></i></button>
             </div>
         </header>
 
         <div class="stat-grid">
-            <div class="card">
-                <span class="card-label">ผู้ป่วยรวม</span>
-                <div class="card-val" id="stat-total">0</div>
-                <div class="card-icon bg-primary-light"><i class="fas fa-users"></i></div>
-            </div>
-            <div class="card">
-                <span class="card-label">ครบกำหนดส่ง</span>
-                <div class="card-val" id="stat-due">0</div>
-                <div class="card-icon bg-info-light"><i class="fas fa-hourglass-end"></i></div>
-            </div>
-            <div class="card">
-                <span class="card-label">ยังไม่ครบกำหนด</span>
-                <div class="card-val" id="stat-notDue">0</div>
-                <div class="card-icon bg-warning-light"><i class="fas fa-hourglass-start"></i></div>
-            </div>
-            <div class="card">
-                <span class="card-label">ส่งประกันแล้ว</span>
-                <div class="card-val text-success" id="stat-insSent">0</div>
-                <div class="card-icon bg-success-light"><i class="fas fa-check-double"></i></div>
-            </div>
-            <div class="card">
-                <span class="card-label">ค้างส่ง (เกินกำหนด)</span>
-                <div class="card-val text-danger" id="stat-dueNotSent">0</div>
-                <div class="card-icon bg-danger-light"><i class="fas fa-times-circle"></i></div>
-            </div>
+            <div class="card"><span class="card-label">ผู้ป่วยรวม</span><div class="card-val" id="stat-total">0</div><div class="card-icon bg-primary-light"><i class="fas fa-users"></i></div></div>
+            <div class="card"><span class="card-label">ครบกำหนดส่ง</span><div class="card-val" id="stat-due">0</div><div class="card-icon bg-info-light"><i class="fas fa-hourglass-end"></i></div></div>
+            <div class="card"><span class="card-label">ยังไม่ครบกำหนด</span><div class="card-val" id="stat-notDue">0</div><div class="card-icon bg-warning-light"><i class="fas fa-hourglass-start"></i></div></div>
+            <div class="card"><span class="card-label">ส่งประกันแล้ว</span><div class="card-val text-success" id="stat-insSent">0</div><div class="card-icon bg-success-light"><i class="fas fa-check-double"></i></div></div>
+            <div class="card"><span class="card-label">ค้างส่ง (เกินกำหนด)</span><div class="card-val text-danger" id="stat-dueNotSent">0</div><div class="card-icon bg-danger-light"><i class="fas fa-times-circle"></i></div></div>
         </div>
 
         <div class="charts-container">
-            <div class="chart-card">
-                <h3><i class="fas fa-chart-bar"></i> สถิตินำส่งรายเดือน</h3>
-                <div class="chart-wrapper"><canvas id="barChart"></canvas></div>
-            </div>
-            <div class="chart-card">
-                <h3><i class="fas fa-tachometer-alt"></i> ประสิทธิภาพเวลา</h3>
-                <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
-            </div>
-            <div class="chart-card full-width">
-                <h3><i class="fas fa-wave-square"></i> การกระจายตัวของจำนวนวันช้า (Frequency)</h3>
-                <div class="chart-wrapper"><canvas id="histChart"></canvas></div>
-            </div>
+            <div class="chart-card"><h3><i class="fas fa-chart-bar"></i> สถิตินำส่งรายเดือน</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
+            <div class="chart-card"><h3><i class="fas fa-tachometer-alt"></i> ประสิทธิภาพเวลา</h3><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
+            <div class="chart-card full-width"><h3><i class="fas fa-wave-square"></i> การกระจายตัวของจำนวนวันช้า</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
         </div>
     </section>
 
-    <!-- VIEW: PATIENTS -->
     <section id="view-patients" class="view-section">
         <header>
-            <div>
-                <h2>รายการข้อมูลผู้ป่วยรายบุคคล</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">ค้นหาและตรวจสอบสถานะการนำส่งชาร์ทรายชื่อ</p>
-            </div>
+            <div><h2>รายการข้อมูลผู้ป่วยรายบุคคล</h2><p style="color: var(--text-muted); font-size: 0.85rem;">ค้นหาและตรวจสอบสถานะการนำส่งชาร์ทรายชื่อ</p></div>
             <div class="header-actions">
                 <input type="text" id="patientSearch" placeholder="ค้นหา HN, AN หรือชื่อ..." onkeyup="handleTableChange()" style="width: 280px;">
                 <select id="statusFilter" onchange="handleTableChange()">
                     <option value="all">ทุกสถานะชาร์ท</option>
                     <option value="ส่งแล้ว">ส่งแล้ว (Complete)</option>
-                    <option value="เกินกำหนด">เกินกำหนด (Late)</option>
+                    <option value="เกินกำหนด">ค้างส่ง/เกินกำหนด (Late)</option>
                     <option value="รอส่ง">รอส่ง (Pending)</option>
                 </select>
-                <button onclick="refreshData()" style="border: none; background: var(--primary); color: white; padding: 0 15px; height: 38px; border-radius: 10px; cursor: pointer; font-size: 0.85rem;">
-                    <i class="fas fa-sync"></i> รีเฟรชข้อมูล
-                </button>
             </div>
         </header>
 
         <div class="data-table-container">
             <table id="patientTable">
                 <thead>
-                    <tr>
-                        <th>HN</th>
-                        <th>AN</th>
-                        <th>ชื่อ-นามสกุล</th>
-                        <th>วันที่ Admit</th>
-                        <th>วันที่ DC</th>
-                        <th>สิทธิ</th>
-                        <th>สถานะ</th>
-                        <th>วันค้าง</th>
-                    </tr>
+                    <tr><th>HN</th><th>AN</th><th>ชื่อ-นามสกุล</th><th>วันที่ Admit</th><th>วันที่ DC</th><th>สถานะกำหนดส่ง</th><th>สถานะชาร์ท</th><th>วันค้าง</th></tr>
                 </thead>
-                <tbody id="patientTableBody">
-                    <!-- Data injected here -->
-                </tbody>
+                <tbody id="patientTableBody"></tbody>
             </table>
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <i class="fas fa-search"></i>
-                <p>ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</p>
-                <small>ลองตรวจสอบการเลือกเดือน หรือตรวจสอบโครงสร้างข้อมูลใน Sheet</small>
-            </div>
+            <div id="emptyState" class="empty-state" style="display: none;"><i class="fas fa-search"></i><p>ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</p></div>
         </div>
     </section>
 
-    <!-- PLACEHOLDER VIEWS -->
-    <section id="view-reports" class="view-section">
-        <header><h2>รายงานและตัวชี้วัด</h2></header>
-        <div class="chart-card"><p style="padding: 2rem; color: var(--text-muted);">ระบบรายงานกำลังอยู่ในช่วงพัฒนาเพิ่มเติม...</p></div>
-    </section>
-    <section id="view-settings" class="view-section">
-        <header><h2>ตั้งค่าระบบวิเคราะห์</h2></header>
-        <div class="chart-card"><p style="padding: 2rem; color: var(--text-muted);">การตั้งค่าเกณฑ์การคำนวณวันช้า (SLA Settings) กำลังพัฒนา...</p></div>
-    </section>
-
+    <section id="view-reports" class="view-section"><header><h2>รายงานและตัวชี้วัด</h2></header><div class="chart-card"><p style="padding: 2rem; color: var(--text-muted);">ระบบรายงานกำลังอยู่ในช่วงพัฒนา...</p></div></section>
+    <section id="view-settings" class="view-section"><header><h2>ตั้งค่าระบบวิเคราะห์</h2></header><div class="chart-card"><p style="padding: 2rem; color: var(--text-muted);">กำลังพัฒนา...</p></div></section>
 </main>
 
 <script>
-    let dbData = null;
-    let charts = {};
+    let dbData = null; let charts = {};
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
 
-    // Helper: Map data key regardless of casing
-    function getKey(obj, keys) {
-        for (let k of keys) {
-            if (obj[k] !== undefined) return obj[k];
-            if (obj[k.toLowerCase()] !== undefined) return obj[k.toLowerCase()];
-            if (obj[k.toUpperCase()] !== undefined) return obj[k.toUpperCase()];
+    function getVal(obj, possibleKeys) {
+        if (!obj) return "-";
+        const normalizedObj = {};
+        for (let key in obj) normalizedObj[key.toString().toLowerCase().trim()] = obj[key];
+        for (let key of possibleKeys) {
+            const lowerKey = key.toLowerCase().trim();
+            if (normalizedObj[lowerKey] !== undefined && normalizedObj[lowerKey] !== "") return normalizedObj[lowerKey];
         }
-        return null;
+        return "-";
     }
 
     function switchView(viewId, element) {
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        element.classList.add('active');
-        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
-        document.getElementById('view-' + viewId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
+        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); document.getElementById('view-' + viewId).classList.add('active');
         if (viewId === 'dashboard') updateView();
     }
 
     function maskName(fullName) {
-        if (!fullName) return "-";
-        const trimmed = fullName.trim();
-        const parts = trimmed.split(/\s+/);
-        if (parts.length < 2) return trimmed;
-        const firstName = parts[0];
-        const lastNameChar = parts[1].charAt(0);
-        return `${firstName} ${lastNameChar}XX`;
+        if (!fullName || fullName === "-") return "-";
+        const parts = fullName.trim().split(/\s+/);
+        return parts.length < 2 ? fullName.trim() : `${parts[0]} ${parts[1].charAt(0)}XX`;
     }
 
     async function refreshData() {
-        const loader = document.getElementById('loader');
-        loader.style.display = 'flex';
-        loader.style.opacity = '1';
-        
+        const loader = document.getElementById('loader'); loader.style.display = 'flex'; loader.style.opacity = '1';
         try {
             const response = await fetch(scriptURL);
-            if (!response.ok) throw new Error('Network error');
             dbData = await response.json();
             
-            console.log("Data Received:", dbData); // Debug for Dev
-
-            const sel = document.getElementById('monthSelect');
-            const currentVal = sel.value;
+            const sel = document.getElementById('monthSelect'); const currentVal = sel.value;
             sel.innerHTML = '<option value="all">แสดงข้อมูลทุกเดือน</option>';
-            
-            const months = dbData.months || [];
-            months.forEach(m => {
-                let opt = document.createElement('option');
-                opt.value = m; opt.innerText = m; sel.appendChild(opt);
-            });
-            if (currentVal && months.includes(currentVal)) sel.value = currentVal;
-
+            (dbData.months || []).forEach(m => { let opt = document.createElement('option'); opt.value = m; opt.innerText = m; sel.appendChild(opt); });
+            if (currentVal && (dbData.months || []).includes(currentVal)) sel.value = currentVal;
             document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + " น.";
             
             updateView();
-            
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 300);
-            }, 500);
+            setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); }, 300);
         } catch (error) {
-            console.error("Fetch Error:", error);
-            loader.innerHTML = `<div style="text-align:center;"><i class="fas fa-wifi-slash fa-2x text-danger"></i><p style="margin-top:15px; color:var(--text-main);">ไม่สามารถเชื่อมต่อข้อมูลได้</p><button onclick="refreshData()" style="margin-top:10px; padding:8px 20px; border-radius:8px; cursor:pointer; background:var(--primary); color:white; border:none;">คลิกเพื่อลองใหม่</button></div>`;
+            loader.innerHTML = `<div style="text-align:center;"><i class="fas fa-wifi-slash fa-2x text-danger"></i><p style="margin-top:15px;">ไม่สามารถเชื่อมต่อข้อมูลได้</p><button onclick="refreshData()" style="margin-top:10px; padding:8px 20px; border-radius:8px; cursor:pointer; background:var(--primary); color:white; border:none;">ลองใหม่</button></div>`;
         }
     }
 
@@ -521,113 +195,97 @@
         if (!dbData) return;
         const month = document.getElementById('monthSelect').value;
         const data = month === 'all' ? dbData.overall : dbData.monthlyDetails[month];
-        
         if (data) {
-            animateValue("stat-total", data.patients || data.total || 0);
-            animateValue("stat-due", data.due || 0);
-            animateValue("stat-notDue", data.notDue || 0);
-            animateValue("stat-insSent", data.insSent || 0);
-            animateValue("stat-dueNotSent", data.dueNotSent || 0);
-            renderCharts(month, data);
+            animateValue("stat-total", data.patients || data.total || 0); animateValue("stat-due", data.due || 0);
+            animateValue("stat-notDue", data.notDue || 0); animateValue("stat-insSent", data.insSent || 0);
+            animateValue("stat-dueNotSent", data.dueNotSent || 0); renderCharts(month, data);
         }
         handleTableChange();
     }
 
     function handleTableChange() {
         const month = document.getElementById('monthSelect').value;
-        const status = document.getElementById('statusFilter').value;
-        const search = document.getElementById('patientSearch').value.toLowerCase();
-        renderPatientTable(month, status, search);
-    }
-
-    function renderPatientTable(monthFilter, statusFilter, searchTerm) {
-        const tbody = document.getElementById('patientTableBody');
-        const emptyState = document.getElementById('emptyState');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        const statusFilter = document.getElementById('statusFilter').value;
+        const searchTerm = document.getElementById('patientSearch').value.toLowerCase();
         
-        // Search across rawData, data, or rows property
-        let rawList = dbData.rawData || dbData.data || dbData.rows || [];
+        const tbody = document.getElementById('patientTableBody'); const emptyState = document.getElementById('emptyState');
+        if (!tbody) return; tbody.innerHTML = '';
         
-        // 1. Filter by Month
-        let filtered = rawList.filter(p => {
-            if (monthFilter === 'all') return true;
-            const pMonth = (p.month || p.Month || "").toString().trim();
-            return pMonth === monthFilter.trim();
-        });
+        let rawList = dbData.rawData || dbData.data || [];
+        
+        // กรองเดือน
+        let filtered = rawList.filter(p => month === 'all' || getVal(p, ['month', 'เดือน']).toString().trim() === month.trim());
 
-        // 2. Filter by Status
+        // กรองตามเงื่อนไขใหม่ 3 ข้อของคุณ
         if (statusFilter !== 'all') {
             filtered = filtered.filter(p => {
-                const s = (p.status || p.Status || "").toString().trim();
-                const ldays = parseInt(p.lateDays || p.LateDays || 0);
-                if (statusFilter === 'เกินกำหนด') return s === 'ยังไม่ส่ง' && ldays > 10;
-                if (statusFilter === 'รอส่ง') return s === 'ยังไม่ส่ง' && ldays <= 10;
-                return s === statusFilter;
+                const s = getVal(p, ['status', 'สถานะ', 'สถานะชาร์ท']).toString().trim();
+                const dueStr = getVal(p, ['duestatus', 'สถานะกำหนดส่ง', 'กำหนดส่ง']).toString().trim();
+                const ldays = parseInt(getVal(p, ['latedays', 'วันค้าง', 'จำนวนวันค้าง']) || 0);
+                
+                // กฎของคุณ: 1.ครบกำหนดส่ง 2.ยังไม่ส่งชาร์ท 3. > 1 วัน
+                const isOverdue = (dueStr === 'ครบกำหนดส่ง' && s === 'ยังไม่ส่งชาร์ท' && ldays > 1);
+                const isSent = (s === 'ส่งแล้ว' || s === 'ส่งชาร์ทแล้ว');
+
+                if (statusFilter === 'เกินกำหนด') return isOverdue;
+                if (statusFilter === 'ส่งแล้ว') return isSent;
+                if (statusFilter === 'รอส่ง') return !isOverdue && !isSent; // ที่เหลือคือรอส่ง
+                return true;
             });
         }
 
-        // 3. Filter by Search
+        // ค้นหา Text
         if (searchTerm) {
             filtered = filtered.filter(p => {
-                const hn = (p.hn || p.HN || "").toString().toLowerCase();
-                const an = (p.an || p.AN || "").toString().toLowerCase();
-                const name = (p.name || p.Name || "").toString().toLowerCase();
+                const hn = getVal(p, ['hn', 'รหัสผู้ป่วย']).toString().toLowerCase();
+                const an = getVal(p, ['an', 'รหัสรับเข้า']).toString().toLowerCase();
+                const name = getVal(p, ['name', 'patientname', 'ชื่อ', 'ชื่อ-สกุล']).toString().toLowerCase();
                 return hn.includes(searchTerm) || an.includes(searchTerm) || name.includes(searchTerm);
             });
         }
 
-        if (filtered.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
-
+        if (filtered.length === 0) { emptyState.style.display = 'block'; return; }
         emptyState.style.display = 'none';
+
         filtered.forEach(p => {
             const tr = document.createElement('tr');
-            const ldays = parseInt(p.lateDays || p.LateDays || 0);
-            const status = (p.status || p.Status || "ยังไม่ส่ง").trim();
+            const hn = getVal(p, ['hn']); const an = getVal(p, ['an']);
+            const rawName = getVal(p, ['name', 'patientname', 'ชื่อ', 'ชื่อ-นามสกุล']);
+            const adate = getVal(p, ['admitdate', 'วันที่ admit', 'วันที่รับเข้า']);
+            const ddate = getVal(p, ['dcdate', 'วันที่ dc', 'วันที่จำหน่าย']);
+            const dueStr = getVal(p, ['duestatus', 'สถานะกำหนดส่ง', 'กำหนดส่ง']);
+            const statusStr = getVal(p, ['status', 'สถานะ', 'สถานะชาร์ท']).toString().trim();
+            const ldays = parseInt(getVal(p, ['latedays', 'วันค้าง', 'จำนวนวันค้าง']) || 0);
 
-            let badgeClass = 'bg-warning-light';
-            let statusText = 'รอส่ง';
-            
-            if (status === 'ส่งแล้ว') {
-                badgeClass = 'bg-success-light';
-                statusText = 'ส่งแล้ว';
-            } else if (ldays > 10) {
-                badgeClass = 'bg-danger-light';
-                statusText = 'เกินกำหนด';
-            }
+            // ใช้กฎคำนวณป้ายสีตามเงื่อนไขเป๊ะๆ
+            const isOverdue = (dueStr === 'ครบกำหนดส่ง' && statusStr === 'ยังไม่ส่งชาร์ท' && ldays > 1);
+            const isSent = (statusStr === 'ส่งแล้ว' || statusStr === 'ส่งชาร์ทแล้ว');
+
+            let badgeClass = 'bg-warning-light'; let statusText = statusStr !== '-' ? statusStr : 'รอส่ง';
+            if (isSent) { badgeClass = 'bg-success-light'; statusText = 'ส่งแล้ว'; }
+            else if (isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง (เกินกำหนด)'; }
 
             tr.innerHTML = `
-                <td><strong>${p.hn || p.HN || "-"}</strong></td>
-                <td>${p.an || p.AN || "-"}</td>
-                <td>${maskName(p.name || p.Name || p.PatientName)}</td>
-                <td>${p.admitDate || p.AdmitDate || "-"}</td>
-                <td>${p.dcDate || p.DCDate || "-"}</td>
-                <td>${p.privilege || p.Privilege || "-"}</td>
+                <td><strong>${hn}</strong></td><td>${an}</td><td>${rawName !== "-" ? maskName(rawName) : "-"}</td>
+                <td>${adate}</td><td>${ddate}</td>
+                <td><span style="font-size:0.8rem; color:var(--text-muted);">${dueStr}</span></td>
                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                <td class="${ldays > 10 ? 'text-danger' : ''}" style="font-weight:500">${ldays} วัน</td>
+                <td class="${isOverdue ? 'text-danger' : ''}" style="font-weight:500">${ldays} วัน</td>
             `;
             tbody.appendChild(tr);
         });
     }
 
     function animateValue(id, end) {
-        const obj = document.getElementById(id);
-        if (!obj) return;
-        let start = parseInt(obj.innerText.replace(/,/g, '')) || 0;
-        if (start === end) { obj.innerText = end.toLocaleString(); return; }
-        const duration = 600;
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            const val = Math.floor(progress * (end - start) + start);
-            obj.innerText = val.toLocaleString();
+        const obj = document.getElementById(id); if (!obj) return;
+        let start = parseInt(obj.innerText.replace(/,/g, '')) || 0; if (start === end) { obj.innerText = end.toLocaleString(); return; }
+        let startTime = null;
+        const step = (ts) => {
+            if (!startTime) startTime = ts;
+            const progress = Math.min((ts - startTime) / 600, 1);
+            obj.innerText = Math.floor(progress * (end - start) + start).toLocaleString();
             if (progress < 1) window.requestAnimationFrame(step);
-        };
-        window.requestAnimationFrame(step);
+        }; window.requestAnimationFrame(step);
     }
 
     function renderCharts(mode, data) {
@@ -637,37 +295,11 @@
         const ctxHist = document.getElementById('histChart')?.getContext('2d');
         if (!ctxBar || !ctxPie || !ctxHist) return;
 
-        charts.bar = new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: mode === 'all' ? (dbData.months || []) : [mode],
-                datasets: [
-                    { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981', borderRadius: 5 },
-                    { label: 'ยังไม่ส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insNotSent) : [data.insNotSent], backgroundColor: '#f43f5e', borderRadius: 5 }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', align: 'end' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true } } }
-        });
-
-        charts.pie = new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: ['ทันเวลา', 'ชาร์ทช้า'],
-                datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#fbbf24'], borderWidth: 0 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
-        });
-
-        const dist = data.lateDaysDist || {};
-        const sortedKeys = Object.keys(dist).sort((a,b) => a-b);
-        charts.hist = new Chart(ctxHist, {
-            type: 'bar',
-            data: {
-                labels: sortedKeys.map(k => k + ' วัน'),
-                datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: 'rgba(99, 102, 241, 0.7)', borderRadius: 4 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
-        });
+        charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981', borderRadius: 5 }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444', borderRadius: 5 } ] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true } } } });
+        charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ค้างส่ง/ช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } } });
+        
+        const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => a-b);
+        charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: 'rgba(99, 102, 241, 0.7)', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } } });
     }
 
     window.onload = refreshData;
