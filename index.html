@@ -104,7 +104,7 @@
     let dbData = null; let charts = {};
     
     // *** วาง Web App URL ที่ได้จาก New Deployment ตรงนี้ ***
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyFEYuKXSQSzm89e1EryhO1R6TlEEyu7y2TYEEjn2i0TBsWiimUVNYEZ1-W76ff15Px9w/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
 
     function switchView(viewId, element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
@@ -178,7 +178,6 @@
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
-            // ปิดบังนามสกุล (ดึงตาม "ชื่อผู้ป่วย" ที่มีในตาราง)
             let safeName = p.name;
             if(safeName) {
                 let parts = safeName.trim().split(/\s+/);
