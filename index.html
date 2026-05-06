@@ -87,7 +87,7 @@
                     <option value="all">ทุกสถานะชาร์ท</option>
                     <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
                     <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
-                    <option value="รอส่ง">รอส่ง (ยังไม่ส่ง)</option>
+                    <option value="รอส่ง">รอส่ง (ยังไม่ถึงกำหนด)</option>
                 </select>
             </div>
         </header>
@@ -104,7 +104,7 @@
     let dbData = null; let charts = {};
     
     // *** นำ URL WEB APP อันใหม่ มาวางตรงนี้นะครับ ***
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyFEYuKXSQSzm89e1EryhO1R6TlEEyu7y2TYEEjn2i0TBsWiimUVNYEZ1-W76ff15Px9w/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyyYZaFAU-z5qAs8ZO2TtrfxyRHSMrsVV1QeOyN-xW0wYtWAWnRPqNCiEYLbY9V3yBJYQ/exec';
 
     function switchView(viewId, element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
@@ -174,11 +174,10 @@
             const tr = document.createElement('tr');
             
             let badgeClass = 'bg-warning-light'; 
-            let statusText = p.status !== "" ? p.status : 'รอส่ง';
+            let statusText = p.status !== "" && p.status !== "nan" ? p.status : 'รอส่ง';
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
-            // ปิดบังนามสกุล
             let safeName = p.name;
             if(safeName) {
                 let parts = safeName.trim().split(/\s+/);
