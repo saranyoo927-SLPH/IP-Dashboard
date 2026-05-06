@@ -213,10 +213,8 @@
         
         let rawList = dbData.rawData || dbData.data || [];
         
-        // กรองเดือน
         let filtered = rawList.filter(p => month === 'all' || getVal(p, ['month', 'เดือน']).toString().trim() === month.trim());
 
-        // กรองตามเงื่อนไขใหม่
         if (statusFilter !== 'all') {
             filtered = filtered.filter(p => {
                 const s = getVal(p, ['status', 'สถานะ', 'สถานะชาร์ท']).toString().trim();
@@ -233,7 +231,6 @@
             });
         }
 
-        // ค้นหา Text
         if (searchTerm) {
             filtered = filtered.filter(p => {
                 const hn = getVal(p, ['hn', 'รหัสผู้ป่วย']).toString().toLowerCase();
