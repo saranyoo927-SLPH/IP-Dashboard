@@ -43,7 +43,7 @@
 </head>
 <body>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังโหลดข้อมูล...</p></div>
+<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังวิเคราะห์ข้อมูล...</p></div>
 
 <aside class="sidebar">
     <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
@@ -93,7 +93,7 @@
         </header>
         <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto;">
             <table id="patientTable">
-                <thead><tr><th>เดือน</th><th>HN</th><th>AN</th><th>ชื่อ-นามสกุล</th><th>วันที่ Admit</th><th>สถานะกำหนดส่ง</th><th>สถานะชาร์ท</th><th>วันค้าง</th></tr></thead>
+                <thead><tr><th>เดือน</th><th>HN</th><th>AN</th><th>ชื่อผู้ป่วย</th><th>วันที่ Admit</th><th>สถานะกำหนดส่ง</th><th>สถานะชาร์ท</th><th>วันค้าง</th></tr></thead>
                 <tbody id="patientTableBody"></tbody>
             </table>
         </div>
@@ -178,7 +178,7 @@
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
-            // ปิดบังนามสกุล
+            // ปิดบังนามสกุล (ดึงตาม "ชื่อผู้ป่วย" ที่มีในตาราง)
             let safeName = p.name;
             if(safeName) {
                 let parts = safeName.trim().split(/\s+/);
