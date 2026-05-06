@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Dashboard Premium v3</title>
+    <title>IP Dashboard Premium v3 - Analytics Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -43,7 +43,7 @@
 </head>
 <body>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังโหลดข้อมูล...</p></div>
+<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังประมวลผลข้อมูลล่าสุด...</p></div>
 
 <aside class="sidebar">
     <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
@@ -58,7 +58,6 @@
 </aside>
 
 <main class="content">
-    
     <!-- DASHBOARD VIEW -->
     <section id="view-dashboard" class="view-section active">
         <header>
@@ -92,9 +91,9 @@
                 <input type="text" id="patientSearch" placeholder="ค้นหา HN, AN หรือชื่อ..." onkeyup="handleTableChange()">
                 <select id="statusFilter" onchange="handleTableChange()">
                     <option value="all">ทุกสถานะชาร์ท</option>
-                    <option value="ส่งแล้ว">ส่งแล้ว</option>
-                    <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
-                    <option value="รอส่ง">รอส่ง</option>
+                    <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
+                    <option value="เกินกำหนด">ค้างส่ง (เกิน 1 วัน)</option>
+                    <option value="รอส่ง">รอส่ง (อยู่ในกำหนด)</option>
                 </select>
             </div>
         </header>
@@ -110,7 +109,7 @@
 <script>
     let dbData = null; let charts = {};
     
-    // ** ตรวจสอบว่าเอาลิงก์ใหม่จาก New Deployment มาใส่ตรงนี้นะครับ **
+    // ** เปลี่ยน URL ตรงนี้เป็นตัวใหม่ที่ได้หลังจากการกด Deploy New Version นะครับ **
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
 
     function switchView(viewId, element) {
@@ -135,7 +134,7 @@
             updateView();
             document.getElementById('loader').style.display = 'none';
         } catch (error) {
-            alert('ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบ URL ของ GAS หรือการตั้งค่า Deployment');
+            alert('ไม่สามารถเชื่อมต่อข้อมูลได้ โปรดตรวจสอบการ Deploy GAS');
             document.getElementById('loader').style.display = 'none';
         }
     }
@@ -186,9 +185,16 @@
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
+            // ปิดบังนามสกุล
+            let safeName = p.name;
+            if(safeName) {
+                let parts = safeName.trim().split(/\s+/);
+                if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "XX";
+            }
+
             tr.innerHTML = `
-                <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${p.name}</td><td>${p.admitDate}</td>
-                <td><span style="font-size:0.8rem;">${p.dueStatus}</span></td>
+                <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td><td>${p.admitDate}</td>
+                <td><span style="font-size:0.8rem; color:var(--text-muted);">${p.dueStatus}</span></td>
                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
                 <td class="${p.isOverdue ? 'text-danger' : ''}">${p.lateDays} วัน</td>
             `;
