@@ -86,8 +86,8 @@
                 <select id="statusFilter" onchange="handleTableChange()">
                     <option value="all">ทุกสถานะชาร์ท</option>
                     <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
-                    <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
-                    <option value="รอส่ง">รอส่ง (ยังไม่ส่ง)</option>
+                    <option value="เกินกำหนด">ค้างส่ง (ค้างเกินกำหนด)</option>
+                    <option value="รอส่ง">รอส่ง</option>
                 </select>
             </div>
         </header>
@@ -103,8 +103,8 @@
 <script>
     let dbData = null; let charts = {};
     
-    // *** วาง URL WEB APP ที่ได้จากการ Deploy ใหม่ตรงนี้นะครับ ***
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyFEYuKXSQSzm89e1EryhO1R6TlEEyu7y2TYEEjn2i0TBsWiimUVNYEZ1-W76ff15Px9w/exec';
+    // *** วาง URL WEB APP ของคุณตรงนี้ ***
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
     function switchView(viewId, element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
@@ -118,6 +118,18 @@
             const response = await fetch(scriptURL);
             dbData = await response.json();
             
+            // ตรวจสอบ Error จากหลังบ้าน
+            if(dbData.status === "error") {
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูลจาก Sheet: \n" + dbData.message);
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+            if(dbData.error) {
+                alert("ระบบแจ้งเตือน: " + dbData.error);
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+            
             const sel = document.getElementById('monthSelect');
             sel.innerHTML = '<option value="all">แสดงข้อมูลทุกเดือน</option>';
             if(dbData.months && dbData.months.length > 0) {
@@ -127,13 +139,14 @@
             updateView();
             document.getElementById('loader').style.display = 'none';
         } catch (error) {
-            alert('ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบ URL ของ GAS หรือการตั้งค่า Deployment');
+            // ดึงข้อผิดพลาดหน้าเว็บ (เช่น ลืมเปิด Anyone หรือ URL ผิด)
+            alert('การเชื่อมต่อล้มเหลว!\n\nโปรดตรวจสอบ:\n1. กด New Deployment แล้วหรือยัง?\n2. ตั้งสิทธิ์ให้ "Everyone (ทุกคน)" เข้าถึงได้ไหม?\n3. คัดลอก URL มาถูกอันหรือไม่?');
             document.getElementById('loader').style.display = 'none';
         }
     }
 
     function updateView() {
-        if (!dbData) return;
+        if (!dbData || !dbData.overall) return;
         const month = document.getElementById('monthSelect').value;
         const data = month === 'all' ? dbData.overall : dbData.monthlyDetails[month];
         if (data) {
@@ -141,7 +154,7 @@
             document.getElementById("stat-due").innerText = data.due.toLocaleString();
             document.getElementById("stat-notDue").innerText = data.notDue.toLocaleString();
             document.getElementById("stat-insSent").innerText = data.insSent.toLocaleString();
-            document.getElementById("stat-dueNotSent").innerText = data.dueNotSent.toLocaleString(); // เลข 24 จะโผล่ขึ้นมาตรงนี้ 100% ครับ
+            document.getElementById("stat-dueNotSent").innerText = data.dueNotSent.toLocaleString();
             renderCharts(month, data);
         }
         handleTableChange();
