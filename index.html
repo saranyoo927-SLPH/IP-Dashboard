@@ -87,7 +87,7 @@
                     <option value="all">ทุกสถานะชาร์ท</option>
                     <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
                     <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
-                    <option value="รอส่ง">รอส่ง (ยังไม่ถึงกำหนด)</option>
+                    <option value="รอส่ง">รอส่ง (ยังไม่ส่ง)</option>
                 </select>
             </div>
         </header>
@@ -174,10 +174,11 @@
             const tr = document.createElement('tr');
             
             let badgeClass = 'bg-warning-light'; 
-            let statusText = p.status !== "" && p.status !== "nan" ? p.status : 'รอส่ง';
+            let statusText = p.status !== "" ? p.status : 'รอส่ง';
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
+            // ปิดบังนามสกุล
             let safeName = p.name;
             if(safeName) {
                 let parts = safeName.trim().split(/\s+/);
