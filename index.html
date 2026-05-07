@@ -74,7 +74,7 @@
         <div class="charts-container">
             <div class="chart-card"><h3>สถิตินำส่งรายเดือน</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
             <div class="chart-card"><h3>ประสิทธิภาพเวลา</h3><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
-            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
+            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า (วัน)</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
         </div>
     </section>
 
@@ -103,7 +103,7 @@
 <script>
     let dbData = null; let charts = {};
     
-    // *** นำ URL WEB APP อันใหม่ มาวางตรงนี้นะครับ ***
+    // *** วาง URL WEB APP ที่ได้จากการ Deploy ใหม่ตรงนี้นะครับ ***
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyFEYuKXSQSzm89e1EryhO1R6TlEEyu7y2TYEEjn2i0TBsWiimUVNYEZ1-W76ff15Px9w/exec';
 
     function switchView(viewId, element) {
@@ -141,7 +141,7 @@
             document.getElementById("stat-due").innerText = data.due.toLocaleString();
             document.getElementById("stat-notDue").innerText = data.notDue.toLocaleString();
             document.getElementById("stat-insSent").innerText = data.insSent.toLocaleString();
-            document.getElementById("stat-dueNotSent").innerText = data.dueNotSent.toLocaleString();
+            document.getElementById("stat-dueNotSent").innerText = data.dueNotSent.toLocaleString(); // เลข 24 จะโผล่ขึ้นมาตรงนี้ 100% ครับ
             renderCharts(month, data);
         }
         handleTableChange();
@@ -174,15 +174,16 @@
             const tr = document.createElement('tr');
             
             let badgeClass = 'bg-warning-light'; 
-            let statusText = p.status !== "" ? p.status : 'รอส่ง';
+            let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
-            // ปิดบังนามสกุล
             let safeName = p.name;
-            if(safeName) {
+            if(safeName && safeName.toLowerCase() !== "#n/a") {
                 let parts = safeName.trim().split(/\s+/);
                 if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "XX";
+            } else {
+                safeName = "-";
             }
 
             tr.innerHTML = `
@@ -190,7 +191,7 @@
                 <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td><td>${p.admitDate}</td>
                 <td><span style="font-size:0.8rem; color:var(--text-muted);">${p.dueStatus}</span></td>
                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                <td class="${p.isOverdue ? 'text-danger' : ''}">${p.lateDays} วัน</td>
+                <td class="${p.isOverdue ? 'text-danger' : ''}">${p.lateDays > 0 ? p.lateDays + ' วัน' : '-'}</td>
             `;
             tbody.appendChild(tr);
         });
