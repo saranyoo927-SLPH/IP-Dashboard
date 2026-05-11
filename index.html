@@ -74,7 +74,7 @@
         <div class="charts-container">
             <div class="chart-card"><h3>สถิตินำส่งรายเดือน</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
             <div class="chart-card"><h3>ประสิทธิภาพเวลา</h3><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
-            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
+            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า (เฉพาะชาร์ทที่ส่งแล้ว)</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
         </div>
     </section>
 
@@ -103,8 +103,8 @@
 <script>
     let dbData = null; let charts = {};
     
-    // *** วาง URL WEB APP ของคุณตรงนี้ ***
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxqKpxLDz2XqcVyuGHttHXFiyXz8YVZJvU5AesYW4ByeVApWq4z8ZyyzeFJnDQ7shHfqQ/exec';
+    // *** นำ URL WEB APP ใหม่ของคุณมาใส่ที่นี่ครับ ***
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
     function switchView(viewId, element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
@@ -180,17 +180,9 @@
             const tr = document.createElement('tr');
             
             let badgeClass = 'bg-warning-light'; 
-            let statusText = p.status !== "" ? p.status : 'รอส่ง';
-            
-            if (p.isSent) { 
-                badgeClass = 'bg-success-light'; 
-                statusText = 'ชาร์ทส่งแล้ว'; 
-            } else if (p.isOverdue) { 
-                badgeClass = 'bg-danger-light'; 
-                statusText = 'ค้างส่ง'; 
-            } else if (p.status.toLowerCase() === '#n/a' || p.status.toLowerCase() === '#na') {
-                statusText = 'รอส่ง (#N/A)'; // ถ้าอยากให้แสดงให้รู้ว่ารอส่งแบบติด N/A
-            }
+            let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
+            if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
+            else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
             let safeName = p.name;
             if(safeName && safeName.toLowerCase() !== "#n/a") {
@@ -218,9 +210,11 @@
         const ctxHist = document.getElementById('histChart')?.getContext('2d');
         
         if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
-        if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ค้างส่ง'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+        
+        if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+        
         if (ctxHist) {
-            const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => a-b);
+            const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
             charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: '#6366f1' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
     }
