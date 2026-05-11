@@ -219,7 +219,7 @@
         
         if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
         
-        // จุดที่แก้ไข: เปลี่ยนข้อความใน Lables เป็น ['ส่งทันเวลา', 'ชาร์ทช้า']
+        // ตรงนี้แก้เฉพาะ Labels จาก 'ค้างส่ง' เป็น 'ชาร์ทช้า'
         if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         
         if (ctxHist) {
