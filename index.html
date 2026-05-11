@@ -74,7 +74,7 @@
         <div class="charts-container">
             <div class="chart-card"><h3>สถิตินำส่งรายเดือน</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
             <div class="chart-card"><h3>ประสิทธิภาพเวลา</h3><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
-            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
+            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า (วัน)</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
         </div>
     </section>
 
@@ -86,7 +86,7 @@
                 <select id="statusFilter" onchange="handleTableChange()">
                     <option value="all">ทุกสถานะชาร์ท</option>
                     <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
-                    <option value="เกินกำหนด">ค้างส่ง</option>
+                    <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
                     <option value="รอส่ง">รอส่ง (ยังไม่ส่ง)</option>
                 </select>
             </div>
@@ -133,7 +133,7 @@
             updateView();
             document.getElementById('loader').style.display = 'none';
         } catch (error) {
-            alert('การเชื่อมต่อล้มเหลว โปรดตรวจสอบ URL ของ GAS หรือการ Deploy!');
+            alert('การเชื่อมต่อล้มเหลว โปรดตรวจสอบ URL ของ GAS!');
             document.getElementById('loader').style.display = 'none';
         }
     }
@@ -211,7 +211,7 @@
         
         if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
         
-        // กราฟประสิทธิภาพเวลา (อัปเดตป้ายกำกับเป็น ชาร์ทช้า)
+        // กราฟประสิทธิภาพเวลา: ส่งทันเวลา / ชาร์ทช้า (ดึงค่าจากตัวแปรใหม่ที่ปลอดภัย)
         if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         
         if (ctxHist) {
