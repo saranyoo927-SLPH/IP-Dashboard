@@ -14,14 +14,15 @@
         .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 2rem; }
         .brand { display: flex; align-items: center; gap: 12px; color: var(--primary); font-size: 1.25rem; font-weight: 600; }
         .nav-menu { display: flex; flex-direction: column; gap: 8px; }
-        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; }
+        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; transition: all 0.2s;}
+        .nav-item:hover { background: #f1f5f9; }
         .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
         .content { height: 100vh; display: flex; flex-direction: column; padding: 1.5rem 2.5rem; gap: 1.5rem; overflow-y: auto; }
         .view-section { display: none; flex-direction: column; gap: 1.5rem; }
         .view-section.active { display: flex; }
         header { display: flex; justify-content: space-between; align-items: center; }
         header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; }
-        select, input[type="text"] { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; }
+        select, input[type="text"], input[type="password"] { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; }
         .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; }
         .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; }
         .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
@@ -39,17 +40,67 @@
         #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
         .spinner { width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Login Modal Styles */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 350px; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .modal-header { text-align: center; margin-bottom: 10px; }
+        .modal-header h3 { color: var(--text-main); font-size: 1.4rem; margin-bottom: 5px; }
+        .modal-header p { color: var(--text-muted); font-size: 0.9rem; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .input-group input { padding: 10px 15px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+        .btn-cancel { background: #f1f5f9; color: var(--text-main); }
+        .btn-cancel:hover { background: #e2e8f0; }
+        .btn-login { background: var(--primary); color: white; }
+        .btn-login:hover { background: #4f46e5; }
+        .error-msg { color: var(--danger); font-size: 0.85rem; text-align: center; display: none; background: var(--bg-danger-light); padding: 8px; border-radius: 8px; background-color: #fee2e2;}
     </style>
 </head>
 <body>
 
+<!-- Loader -->
 <div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังวิเคราะห์ข้อมูล...</p></div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-lock" style="color: var(--primary); margin-right: 8px;"></i>เข้าสู่ระบบ</h3>
+            <p>สิทธิ์เฉพาะเจ้าหน้าที่ที่เกี่ยวข้อง</p>
+        </div>
+        <div id="loginError" class="error-msg">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!</div>
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="usernameInput" placeholder="กรอกชื่อผู้ใช้">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="passwordInput" placeholder="กรอกรหัสผ่าน">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeLogin()">ยกเลิก</button>
+            <button class="btn btn-login" onclick="attemptLogin()">เข้าสู่ระบบ</button>
+        </div>
+    </div>
+</div>
 
 <aside class="sidebar">
     <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
     <nav class="nav-menu">
-        <button class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard Overview</span></button>
-        <button class="nav-item" onclick="switchView('patients', this)"><i class="fas fa-id-card"></i><span>Patient Records</span></button>
+        <button class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard Overview</span></button>
+        <button class="nav-item" id="nav-patients" onclick="switchView('patients', this)">
+            <i class="fas fa-id-card"></i><span>Patient Records</span>
+            <i class="fas fa-lock" id="lockIcon" style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);"></i>
+        </button>
+        
+        <!-- ปุ่ม Logout (ซ่อนไว้ก่อน จะแสดงเมื่อ Login ผ่าน) -->
+        <button class="nav-item" id="btnLogout" onclick="logout()" style="display: none; margin-top: auto; color: var(--danger);">
+            <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
+        </button>
     </nav>
 </aside>
 
@@ -59,7 +110,7 @@
             <h2>วิเคราะห์สถิติภาพรวม</h2>
             <div class="header-actions">
                 <select id="monthSelect" onchange="updateView()"><option value="all">แสดงข้อมูลทุกเดือน</option></select>
-                <button onclick="refreshData()" style="padding: 8px 12px; border-radius: 10px; border:1px solid #ddd; cursor:pointer;"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="refreshData()" style="padding: 8px 12px; border-radius: 10px; border:1px solid #ddd; cursor:pointer; background: white;"><i class="fas fa-sync-alt"></i></button>
             </div>
         </header>
 
@@ -91,7 +142,7 @@
                 </select>
             </div>
         </header>
-        <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto;">
+        <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto; box-shadow: var(--shadow);">
             <table id="patientTable">
                 <thead><tr><th>เดือน</th><th>HN</th><th>AN</th><th>ชื่อผู้ป่วย</th><th>วันที่ Admit</th><th>สถานะกำหนดส่ง</th><th>การส่งชาร์ท</th><th>วันค้าง</th></tr></thead>
                 <tbody id="patientTableBody"></tbody>
@@ -103,13 +154,74 @@
 <script>
     let dbData = null; let charts = {};
     
-    // *** นำ URL WEB APP ใหม่ของคุณมาใส่ที่นี่ครับ ***
+    // สถานะการ Login
+    let isLoggedIn = false;
+    let pendingElement = null; // เก็บค่าปุ่มที่กดไว้รอทำรายการหลัง login
+    
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
+    // รองรับการกด Enter เพื่อ Login
+    document.getElementById('passwordInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') attemptLogin();
+    });
+
     function switchView(viewId, element) {
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
-        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); document.getElementById('view-' + viewId).classList.add('active');
+        // ตรวจสอบสิทธิ์ถ้าจะเข้าหน้า patients
+        if (viewId === 'patients' && !isLoggedIn) {
+            pendingElement = element;
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('usernameInput').focus();
+            return; // หยุดการทำงาน เปลี่ยนหน้าไม่ได้
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); 
+        if(element) element.classList.add('active');
+        
+        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); 
+        document.getElementById('view-' + viewId).classList.add('active');
+        
         if (viewId === 'dashboard') updateView();
+    }
+
+    function closeLogin() {
+        document.getElementById('loginModal').classList.remove('active');
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('passwordInput').value = '';
+    }
+
+    function attemptLogin() {
+        const user = document.getElementById('usernameInput').value;
+        const pass = document.getElementById('passwordInput').value;
+
+        if (user === 'admin' && pass === '1234') {
+            // Login สำเร็จ
+            isLoggedIn = true;
+            closeLogin();
+            
+            // เปลี่ยน UI แสดงว่า Login แล้ว
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('lockIcon').className = 'fas fa-unlock'; // เปลี่ยนไอคอนแม่กุญแจ
+            document.getElementById('btnLogout').style.display = 'flex'; // แสดงปุ่มออกจากระบบ
+
+            // สลับไปยังหน้าที่กดค้างไว้
+            if (pendingElement) {
+                switchView('patients', pendingElement);
+                pendingElement = null;
+            }
+        } else {
+            // Login ไม่สำเร็จ
+            document.getElementById('loginError').style.display = 'block';
+        }
+    }
+
+    function logout() {
+        isLoggedIn = false;
+        document.getElementById('lockIcon').className = 'fas fa-lock'; // เปลี่ยนไอคอนแม่กุญแจกลับ
+        document.getElementById('btnLogout').style.display = 'none'; // ซ่อนปุ่มออกจากระบบ
+        
+        // บังคับกลับไปหน้า Dashboard
+        switchView('dashboard', document.getElementById('nav-dashboard'));
     }
 
     async function refreshData() {
