@@ -8,66 +8,166 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #6366f1; --primary-light: #e0e7ff; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f8fafc; --sidebar-bg: #ffffff; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        /* CSS Variables for Light & Dark Mode */
+        :root { 
+            --primary: #6366f1; --primary-light: #e0e7ff; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; 
+            --bg: #f8fafc; --sidebar-bg: #ffffff; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; 
+            --border-color: #e2e8f0; --th-bg: #f8fafc; --tr-border: #f8fafc; --hover-bg: #f1f5f9;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); 
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --sidebar-bg: #1e293b; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; 
+            --border-color: #334155; --th-bg: #0f172a; --tr-border: #1e293b; --hover-bg: #334155;
+            --primary-light: rgba(99, 102, 241, 0.2);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; transition: background-color 0.3s, color 0.3s; }
         body { background: var(--bg); color: var(--text-main); display: grid; grid-template-columns: 260px 1fr; height: 100vh; overflow: hidden; }
-        .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 2rem; }
+        
+        /* Sidebar & Responsive */
+        .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 2rem; z-index: 100;}
         .brand { display: flex; align-items: center; gap: 12px; color: var(--primary); font-size: 1.25rem; font-weight: 600; }
-        .nav-menu { display: flex; flex-direction: column; gap: 8px; }
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; flex: 1;}
         .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; transition: all 0.2s;}
-        .nav-item:hover { background: #f1f5f9; }
+        .nav-item:hover { background: var(--hover-bg); color: var(--text-main); }
         .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+        .bottom-actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 15px;}
+        
+        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90;}
+        
         .content { height: 100vh; display: flex; flex-direction: column; padding: 1.5rem 2.5rem; gap: 1.5rem; overflow-y: auto; }
         .view-section { display: none; flex-direction: column; gap: 1.5rem; }
         .view-section.active { display: flex; }
-        header { display: flex; justify-content: space-between; align-items: center; }
-        header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; }
-        select, input[type="text"], input[type="password"] { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; }
+        header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; display: flex; align-items: center; gap: 10px;}
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        /* Inputs & Buttons */
+        select, input[type="text"], input[type="password"], input[type="date"] { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border-color); outline: none; font-size: 0.9rem; background: var(--card-bg); color: var(--text-main); }
+        .action-btn { padding: 8px 16px; border-radius: 10px; border:1px solid var(--border-color); cursor:pointer; background: var(--card-bg); font-size: 0.9rem; transition: 0.2s; color: var(--text-main); display: flex; align-items: center; gap: 5px;}
+        .action-btn:hover { background: var(--hover-bg); }
+        .btn-export { color: #10b981; border-color: #10b981; display: none; }
+        .btn-export:hover { background: rgba(16, 185, 129, 0.1); }
+        .reveal-btn { background: none; border: none; cursor: pointer; color: var(--primary); margin-left: 8px; display: none; font-size: 1rem;}
+        
         .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; }
-        .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; }
+        .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; border: 1px solid var(--border-color); }
         .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
-        .card-val { font-size: 1.75rem; font-weight: 700; }
+        .card-val { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
+        
         .charts-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; flex: 1; min-height: 350px;}
-        .chart-card { background: white; padding: 1.5rem; border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+        .chart-card { background: var(--card-bg); padding: 1.5rem; border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; border: 1px solid var(--border-color);}
         .chart-wrapper { flex: 1; position: relative; min-height: 250px;}
         .full-width { grid-column: span 2; }
+        
+        /* Table Styles */
+        .table-container { background: var(--card-bg); border-radius: 15px; padding: 10px; overflow-x: auto; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; color: var(--text-muted); border-bottom: 1px solid #e2e8f0; }
-        td { padding: 12px; border-bottom: 1px solid #f8fafc; font-size: 0.9rem; }
+        th { text-align: left; padding: 12px; background: var(--th-bg); color: var(--text-muted); border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
+        th.sortable:hover { background: var(--hover-bg); color: var(--text-main); }
+        th i { margin-left: 5px; font-size: 0.8rem; color: var(--text-muted); opacity: 0.5; }
+        th.sortable.active-sort i { color: var(--primary); opacity: 1; }
+        td { padding: 12px; border-bottom: 1px solid var(--tr-border); font-size: 0.9rem; color: var(--text-main); }
+        tbody tr { cursor: pointer; transition: background 0.2s; }
+        tbody tr:hover { background: var(--hover-bg); }
+        
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
         .text-danger { color: var(--danger); } .text-success { color: var(--success); }
-        .bg-success-light { background: #dcfce7; color: var(--success); } .bg-danger-light { background: #fee2e2; color: var(--danger); } .bg-warning-light { background: #fef3c7; color: var(--warning); }
-        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
+        [data-theme="light"] .bg-success-light { background: #dcfce7; color: var(--success); } 
+        [data-theme="light"] .bg-danger-light { background: #fee2e2; color: var(--danger); } 
+        [data-theme="light"] .bg-warning-light { background: #fef3c7; color: var(--warning); }
+        [data-theme="dark"] .bg-success-light { background: rgba(16,185,129,0.2); color: #34d399; } 
+        [data-theme="dark"] .bg-danger-light { background: rgba(239,68,68,0.2); color: #f87171; } 
+        [data-theme="dark"] .bg-warning-light { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        
+        /* Empty State & Pagination */
+        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: none; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+        .page-btn { padding: 6px 12px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); cursor: pointer; border-radius: 8px; font-size: 0.9rem; transition: 0.2s; }
+        .page-btn:hover:not(:disabled) { background: var(--hover-bg); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        #loader { position: fixed; inset: 0; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; opacity: 0.9; }
         .spinner { width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Login Modal Styles */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 350px; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 20px; width: 350px; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--border-color); position: relative; }
+        .modal-content.large { width: 500px; max-width: 90vw; }
         .modal-header { text-align: center; margin-bottom: 10px; }
         .modal-header h3 { color: var(--text-main); font-size: 1.4rem; margin-bottom: 5px; }
         .modal-header p { color: var(--text-muted); font-size: 0.9rem; }
         .input-group { display: flex; flex-direction: column; gap: 5px; }
         .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
-        .input-group input { padding: 10px 15px; }
         .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
         .btn { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; transition: background 0.2s; }
-        .btn-cancel { background: #f1f5f9; color: var(--text-main); }
-        .btn-cancel:hover { background: #e2e8f0; }
+        .btn-cancel { background: var(--hover-bg); color: var(--text-main); }
+        .btn-cancel:hover { filter: brightness(0.95); }
         .btn-login { background: var(--primary); color: white; }
         .btn-login:hover { background: #4f46e5; }
-        .error-msg { color: var(--danger); font-size: 0.85rem; text-align: center; display: none; background: var(--bg-danger-light); padding: 8px; border-radius: 8px; background-color: #fee2e2;}
+        .error-msg { color: var(--danger); font-size: 0.85rem; text-align: center; display: none; background: rgba(239,68,68,0.1); padding: 8px; border-radius: 8px; }
+        .close-modal-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        .close-modal-btn:hover { color: var(--danger); }
+
+        /* Patient Detail Grid */
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;}
+        .detail-item { background: var(--bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .detail-item label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .detail-item span { display: block; font-weight: 500; color: var(--text-main); font-size: 1rem; }
+        .detail-item.full-width { grid-column: span 2; }
+
+        /* Responsive Breakpoints */
+        #mobileMenuBtn { display: none; }
+        .date-filter-group { display: flex; align-items: center; gap: 5px; }
+        
+        @media (max-width: 1024px) {
+            .stat-grid { grid-template-columns: repeat(3, 1fr); }
+            .charts-container { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+        @media (max-width: 768px) {
+            body { grid-template-columns: 1fr; }
+            .sidebar { position: fixed; height: 100vh; left: -280px; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
+            .sidebar.active { left: 0; }
+            .mobile-overlay.active { display: block; }
+            #mobileMenuBtn { display: flex; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-actions { width: 100%; justify-content: flex-start; }
+            .date-filter-group { width: 100%; justify-content: space-between; }
+        }
+        @media (max-width: 480px) {
+            .stat-grid { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-item.full-width { grid-column: span 1; }
+        }
+
+        /* Print Settings */
+        @media print {
+            .sidebar, .header-actions, #loginModal, #detailModal, #loader, .pagination, #mobileMenuBtn { display: none !important; }
+            body { grid-template-columns: 1fr; overflow: visible; height: auto; background: white; color: black; }
+            .content { height: auto; overflow: visible; padding: 0; }
+            .chart-card, .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            table { font-size: 10pt; }
+            th, td { padding: 8px; border-color: #ddd; }
+        }
     </style>
 </head>
-<body>
+<body data-theme="light">
 
 <!-- Loader -->
 <div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังวิเคราะห์ข้อมูล...</p></div>
 
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
+
 <!-- Login Modal -->
 <div id="loginModal" class="modal-overlay">
     <div class="modal-content">
+        <button class="close-modal-btn" onclick="closeLogin()"><i class="fas fa-times"></i></button>
         <div class="modal-header">
             <h3><i class="fas fa-lock" style="color: var(--primary); margin-right: 8px;"></i>เข้าสู่ระบบ</h3>
             <p>สิทธิ์เฉพาะเจ้าหน้าที่ที่เกี่ยวข้อง</p>
@@ -75,20 +175,52 @@
         <div id="loginError" class="error-msg">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!</div>
         <div class="input-group">
             <label>Username</label>
-            <input type="text" id="usernameInput" placeholder="กรอกชื่อผู้ใช้">
+            <input type="text" id="usernameInput" placeholder="admin">
         </div>
         <div class="input-group">
             <label>Password</label>
-            <input type="password" id="passwordInput" placeholder="กรอกรหัสผ่าน">
+            <input type="password" id="passwordInput" placeholder="1234">
         </div>
         <div class="modal-actions">
-            <button class="btn btn-cancel" onclick="closeLogin()">ยกเลิก</button>
-            <button class="btn btn-login" onclick="attemptLogin()">เข้าสู่ระบบ</button>
+            <button class="btn btn-login" onclick="attemptLogin()" style="width: 100%;">เข้าสู่ระบบ</button>
         </div>
     </div>
 </div>
 
-<aside class="sidebar">
+<!-- Patient Detail Modal -->
+<div id="detailModal" class="modal-overlay">
+    <div class="modal-content large">
+        <button class="close-modal-btn" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
+        <div class="modal-header" style="text-align: left; margin-bottom: 0;">
+            <h3 id="detName">ชื่อผู้ป่วย</h3>
+            <p><span id="detHN">HN</span> | <span id="detAN">AN</span></p>
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>วันที่ Admit</label>
+                <span id="detAdmitDate">-</span>
+            </div>
+            <div class="detail-item">
+                <label>ประจำเดือน</label>
+                <span id="detMonth" style="color: var(--primary);">-</span>
+            </div>
+            <div class="detail-item">
+                <label>สถานะกำหนดส่ง</label>
+                <span id="detDueStatus">-</span>
+            </div>
+            <div class="detail-item">
+                <label>จำนวนวันค้างส่ง</label>
+                <span id="detLateDays" class="text-danger">-</span>
+            </div>
+            <div class="detail-item full-width">
+                <label>การส่งชาร์ท</label>
+                <span id="detStatusBadge" class="badge">รอส่ง</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
     <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
     <nav class="nav-menu">
         <button class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard Overview</span></button>
@@ -96,21 +228,30 @@
             <i class="fas fa-id-card"></i><span>Patient Records</span>
             <i class="fas fa-lock" id="lockIcon" style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);"></i>
         </button>
-        
-        <!-- ปุ่ม Logout (ซ่อนไว้ก่อน จะแสดงเมื่อ Login ผ่าน) -->
-        <button class="nav-item" id="btnLogout" onclick="logout()" style="display: none; margin-top: auto; color: var(--danger);">
+    </nav>
+    <div class="bottom-actions">
+        <!-- Dark Mode Toggle -->
+        <button class="nav-item" onclick="toggleDarkMode()">
+            <i class="fas fa-moon" id="themeIcon"></i><span id="themeText">โหมดกลางคืน</span>
+        </button>
+        <!-- Logout Button -->
+        <button class="nav-item" id="btnLogout" onclick="logout()" style="display: none; color: var(--danger);">
             <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
         </button>
-    </nav>
+    </div>
 </aside>
 
 <main class="content">
     <section id="view-dashboard" class="view-section active">
         <header>
-            <h2>วิเคราะห์สถิติภาพรวม</h2>
+            <h2>
+                <button id="mobileMenuBtn" class="action-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                วิเคราะห์สถิติภาพรวม
+            </h2>
             <div class="header-actions">
                 <select id="monthSelect" onchange="updateView()"><option value="all">แสดงข้อมูลทุกเดือน</option></select>
-                <button onclick="refreshData()" style="padding: 8px 12px; border-radius: 10px; border:1px solid #ddd; cursor:pointer; background: white;"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="window.print()" class="action-btn" title="พิมพ์รายงาน"><i class="fas fa-print"></i></button>
+                <button onclick="refreshData()" class="action-btn" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt"></i></button>
             </div>
         </header>
 
@@ -131,22 +272,54 @@
 
     <section id="view-patients" class="view-section">
         <header>
-            <h2>รายการข้อมูลผู้ป่วย</h2>
+            <h2>
+                <button id="mobileMenuBtn" class="action-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                รายการข้อมูลผู้ป่วย
+            </h2>
             <div class="header-actions">
-                <input type="text" id="patientSearch" placeholder="ค้นหา HN, AN หรือชื่อ..." onkeyup="handleTableChange()">
+                <input type="text" id="patientSearch" placeholder="ค้นหา HN, AN หรือชื่อ..." onkeyup="handleSearchInput()">
                 <select id="statusFilter" onchange="handleTableChange()">
                     <option value="all">ทุกสถานะชาร์ท</option>
                     <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
                     <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
                     <option value="รอส่ง">รอส่ง</option>
                 </select>
+                <!-- Date Range Filter -->
+                <div class="date-filter-group" title="กรองตามวันที่ Admit">
+                    <input type="date" id="startDate" onchange="handleTableChange()">
+                    <span style="color:var(--text-muted)">ถึง</span>
+                    <input type="date" id="endDate" onchange="handleTableChange()">
+                </div>
+                <button class="action-btn btn-export" id="btnExport" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> ส่งออก</button>
             </div>
         </header>
-        <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto; box-shadow: var(--shadow);">
+        <div class="table-container">
             <table id="patientTable">
-                <thead><tr><th>เดือน</th><th>HN</th><th>AN</th><th>ชื่อผู้ป่วย</th><th>วันที่ Admit</th><th>สถานะกำหนดส่ง</th><th>การส่งชาร์ท</th><th>วันค้าง</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th class="sortable" onclick="handleSort('month', this)">เดือน <i class="fas fa-sort"></i></th>
+                        <th class="sortable" onclick="handleSort('hn', this)">HN <i class="fas fa-sort"></i></th>
+                        <th class="sortable" onclick="handleSort('an', this)">AN <i class="fas fa-sort"></i></th>
+                        <th>
+                            ชื่อผู้ป่วย 
+                            <button id="btnToggleName" class="reveal-btn" onclick="toggleNameMask()" title="เปิด/ปิดการซ่อนชื่อ"><i class="fas fa-eye"></i></button>
+                        </th>
+                        <th class="sortable" onclick="handleSort('admitDate', this)">วันที่ Admit <i class="fas fa-sort"></i></th>
+                        <th>สถานะกำหนดส่ง</th>
+                        <th>การส่งชาร์ท</th>
+                        <th class="sortable" onclick="handleSort('lateDays', this)">วันค้าง <i class="fas fa-sort"></i></th>
+                    </tr>
+                </thead>
                 <tbody id="patientTableBody"></tbody>
             </table>
+            
+            <div id="emptyState" class="empty-state">
+                <i class="fas fa-box-open" style="font-size: 3rem; color: var(--border-color); margin-bottom: 15px; display: block;"></i>
+                <h3 style="color: var(--text-main); margin-bottom: 5px;">ไม่พบข้อมูล</h3>
+                <p>ลองเปลี่ยนคำค้นหา หรือช่วงวันที่ดูใหม่</p>
+            </div>
+
+            <div class="pagination" id="paginationControls"></div>
         </div>
     </section>
 </main>
@@ -154,33 +327,81 @@
 <script>
     let dbData = null; let charts = {};
     
-    // สถานะการ Login
+    // สถานะระบบ
     let isLoggedIn = false;
-    let pendingElement = null; // เก็บค่าปุ่มที่กดไว้รอทำรายการหลัง login
+    let pendingElement = null; 
+    let inactivityTimer = null;
+    let showFullName = false;
+    let isDarkMode = false;
+
+    // สถานะตาราง
+    let currentFilteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 50; 
+    let sortCol = '';
+    let sortAsc = true;
     
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
-    // รองรับการกด Enter เพื่อ Login
+    // ---------------- Initialization & Theme ---------------- //
+
+    window.onload = () => {
+        // Load Theme preference
+        const savedTheme = localStorage.getItem('ipDashboardTheme');
+        if (savedTheme === 'dark') {
+            toggleDarkMode(true); // force dark mode
+        }
+        refreshData();
+    };
+
+    function toggleDarkMode(forceDark = null) {
+        const body = document.body;
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+        
+        if (forceDark === true || (forceDark === null && body.getAttribute('data-theme') === 'light')) {
+            body.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+            text.innerText = 'โหมดสว่าง';
+            isDarkMode = true;
+            localStorage.setItem('ipDashboardTheme', 'dark');
+            Chart.defaults.color = '#94a3b8'; // เปลี่ยนสีตัวหนังสือในกราฟ
+        } else {
+            body.setAttribute('data-theme', 'light');
+            icon.className = 'fas fa-moon';
+            text.innerText = 'โหมดกลางคืน';
+            isDarkMode = false;
+            localStorage.setItem('ipDashboardTheme', 'light');
+            Chart.defaults.color = '#64748b';
+        }
+        
+        // Redraw charts if data exists
+        if(dbData) updateView();
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('mobileOverlay').classList.toggle('active');
+    }
+
+    // ---------------- Security & Session ---------------- //
+
     document.getElementById('passwordInput').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') attemptLogin();
     });
 
-    function switchView(viewId, element) {
-        // ตรวจสอบสิทธิ์ถ้าจะเข้าหน้า patients
-        if (viewId === 'patients' && !isLoggedIn) {
-            pendingElement = element;
-            document.getElementById('loginModal').classList.add('active');
-            document.getElementById('usernameInput').focus();
-            return; // หยุดการทำงาน เปลี่ยนหน้าไม่ได้
-        }
+    window.addEventListener('mousemove', resetInactivityTimer);
+    window.addEventListener('keypress', resetInactivityTimer);
+    window.addEventListener('scroll', resetInactivityTimer);
 
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); 
-        if(element) element.classList.add('active');
-        
-        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); 
-        document.getElementById('view-' + viewId).classList.add('active');
-        
-        if (viewId === 'dashboard') updateView();
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        if (isLoggedIn) {
+            inactivityTimer = setTimeout(() => {
+                alert("หมดเวลาเชื่อมต่อระบบ เพื่อความปลอดภัยระบบได้ทำการออกจากระบบอัตโนมัติ");
+                logout();
+            }, 15 * 60 * 1000); // 15 mins
+        }
     }
 
     function closeLogin() {
@@ -194,34 +415,65 @@
         const pass = document.getElementById('passwordInput').value;
 
         if (user === 'admin' && pass === '1234') {
-            // Login สำเร็จ
             isLoggedIn = true;
             closeLogin();
             
-            // เปลี่ยน UI แสดงว่า Login แล้ว
             document.getElementById('usernameInput').value = '';
             document.getElementById('passwordInput').value = '';
-            document.getElementById('lockIcon').className = 'fas fa-unlock'; // เปลี่ยนไอคอนแม่กุญแจ
-            document.getElementById('btnLogout').style.display = 'flex'; // แสดงปุ่มออกจากระบบ
+            document.getElementById('lockIcon').className = 'fas fa-unlock'; 
+            document.getElementById('btnLogout').style.display = 'flex';
+            document.getElementById('btnExport').style.display = 'inline-block';
+            document.getElementById('btnToggleName').style.display = 'inline-block';
 
-            // สลับไปยังหน้าที่กดค้างไว้
+            resetInactivityTimer();
+
             if (pendingElement) {
                 switchView('patients', pendingElement);
                 pendingElement = null;
             }
         } else {
-            // Login ไม่สำเร็จ
             document.getElementById('loginError').style.display = 'block';
         }
     }
 
     function logout() {
         isLoggedIn = false;
-        document.getElementById('lockIcon').className = 'fas fa-lock'; // เปลี่ยนไอคอนแม่กุญแจกลับ
-        document.getElementById('btnLogout').style.display = 'none'; // ซ่อนปุ่มออกจากระบบ
+        showFullName = false;
+        document.getElementById('lockIcon').className = 'fas fa-lock'; 
+        document.getElementById('btnLogout').style.display = 'none';
+        document.getElementById('btnExport').style.display = 'none';
+        document.getElementById('btnToggleName').style.display = 'none';
+        document.querySelector('#btnToggleName i').className = 'fas fa-eye';
         
-        // บังคับกลับไปหน้า Dashboard
+        clearTimeout(inactivityTimer);
+        closeDetailModal();
         switchView('dashboard', document.getElementById('nav-dashboard'));
+        if(currentFilteredData.length > 0) renderTablePage();
+    }
+
+    // ---------------- Navigation & Fetch Data ---------------- //
+
+    function switchView(viewId, element) {
+        if (viewId === 'patients' && !isLoggedIn) {
+            pendingElement = element;
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('usernameInput').focus();
+            
+            // Close mobile menu if open
+            if(window.innerWidth <= 768) toggleSidebar();
+            return; 
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); 
+        if(element) element.classList.add('active');
+        
+        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); 
+        document.getElementById('view-' + viewId).classList.add('active');
+        
+        // Close mobile menu when navigating
+        if(window.innerWidth <= 768) toggleSidebar();
+        
+        if (viewId === 'dashboard') updateView();
     }
 
     async function refreshData() {
@@ -250,6 +502,8 @@
         }
     }
 
+    // ---------------- Dashboard & Charts ---------------- //
+
     function updateView() {
         if (!dbData || !dbData.overall) return;
         const month = document.getElementById('monthSelect').value;
@@ -265,13 +519,57 @@
         handleTableChange();
     }
 
+    function renderCharts(mode, data) {
+        Object.values(charts).forEach(c => c && c.destroy());
+        const ctxBar = document.getElementById('barChart')?.getContext('2d');
+        const ctxPie = document.getElementById('pieChart')?.getContext('2d');
+        const ctxHist = document.getElementById('histChart')?.getContext('2d');
+        
+        const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
+
+        if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ยังไม่ครบกำหนด', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].notDue) : [data.notDue], backgroundColor: '#f59e0b' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { color: gridColor } }, y: { stacked: true, grid: { color: gridColor } } } } });
+        
+        if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'], borderColor: isDarkMode ? '#1e293b' : '#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        
+        if (ctxHist) {
+            const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
+            charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: '#6366f1' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } } } });
+        }
+    }
+
+    // ---------------- Table Data Management ---------------- //
+
+    // Helper: แปลงวันที่ (DD/MM/YYYY หรือ YYYY-MM-DD) เป็น Date Object
+    function parseDateString(dateString) {
+        if (!dateString) return null;
+        // กรณีเป็น YYYY-MM-DD
+        if (dateString.includes('-')) return new Date(dateString);
+        // กรณีเป็น DD/MM/YYYY
+        if (dateString.includes('/')) {
+            const parts = dateString.split('/');
+            // เดือนใน JS เริ่มที่ 0 (มค = 0)
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return null;
+    }
+
+    function handleSearchInput() {
+        currentPage = 1;
+        handleTableChange();
+    }
+
     function handleTableChange() {
         const month = document.getElementById('monthSelect').value;
         const statusFilter = document.getElementById('statusFilter').value;
         const search = document.getElementById('patientSearch').value.toLowerCase();
         
-        const tbody = document.getElementById('patientTableBody');
-        if (!tbody) return; tbody.innerHTML = '';
+        // Date Range
+        const startDStr = document.getElementById('startDate').value;
+        const endDStr = document.getElementById('endDate').value;
+        const startD = startDStr ? new Date(startDStr) : null;
+        const endD = endDStr ? new Date(endDStr) : null;
+        if (startD) startD.setHours(0,0,0,0);
+        if (endD) endD.setHours(23,59,59,999);
         
         let filtered = (dbData.rawData || []).filter(p => month === 'all' || p.month === month);
 
@@ -288,8 +586,138 @@
             filtered = filtered.filter(p => (p.hn+p.an+p.name).toLowerCase().includes(search));
         }
 
-        filtered.forEach(p => {
+        // Date Filtering logic
+        if (startD || endD) {
+            filtered = filtered.filter(p => {
+                const pDate = parseDateString(p.admitDate);
+                if (!pDate) return true; // ถ้าวันที่ในระบบไม่มี/อ่านไม่ได้ ให้แสดงไปก่อน
+                if (startD && pDate < startD) return false;
+                if (endD && pDate > endD) return false;
+                return true;
+            });
+        }
+
+        currentFilteredData = filtered;
+        applySorting(); 
+        renderTablePage(); 
+        renderPagination(); 
+    }
+
+    function handleSort(col, headerElement) {
+        if (sortCol === col) {
+            sortAsc = !sortAsc;
+        } else {
+            sortCol = col;
+            sortAsc = true;
+        }
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.classList.remove('active-sort');
+            const icon = th.querySelector('i');
+            if(icon) icon.className = 'fas fa-sort';
+        });
+        
+        if(headerElement) {
+            headerElement.classList.add('active-sort');
+            const icon = headerElement.querySelector('i');
+            if(icon) icon.className = sortAsc ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+
+        applySorting();
+        renderTablePage();
+    }
+
+    function applySorting() {
+        if (!sortCol) return;
+        currentFilteredData.sort((a, b) => {
+            let valA = a[sortCol] || ''; let valB = b[sortCol] || '';
+            
+            // กรณีเรียงตามวันที่
+            if (sortCol === 'admitDate') {
+                let dA = parseDateString(valA) || new Date(0);
+                let dB = parseDateString(valB) || new Date(0);
+                return sortAsc ? dA - dB : dB - dA;
+            }
+            // กรณีเรียงตัวเลขวันค้าง
+            if (sortCol === 'lateDays') {
+                valA = Number(valA) || 0; valB = Number(valB) || 0;
+            }
+            
+            if (valA === valB) return 0;
+            if (valA > valB) return sortAsc ? 1 : -1;
+            return sortAsc ? -1 : 1;
+        });
+    }
+
+    function toggleNameMask() {
+        if(!isLoggedIn) return;
+        showFullName = !showFullName;
+        const icon = document.querySelector('#btnToggleName i');
+        icon.className = showFullName ? 'fas fa-eye-slash' : 'fas fa-eye';
+        renderTablePage();
+    }
+
+    // ---------------- Patient Detail Modal ---------------- //
+
+    function openDetailModal(index) {
+        if(!isLoggedIn) return; // กันคนนอกกด
+        const p = currentFilteredData[index];
+        if(!p) return;
+
+        let safeName = p.name;
+        if(!showFullName && safeName && safeName.toLowerCase() !== "#n/a") {
+            let parts = safeName.trim().split(/\s+/);
+            if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "***";
+        }
+
+        document.getElementById('detName').innerText = safeName;
+        document.getElementById('detHN').innerText = 'HN: ' + p.hn;
+        document.getElementById('detAN').innerText = 'AN: ' + p.an;
+        document.getElementById('detAdmitDate').innerText = p.admitDate || '-';
+        document.getElementById('detMonth').innerText = p.month || '-';
+        document.getElementById('detDueStatus').innerText = p.dueStatus || '-';
+        
+        let lateText = p.lateDays > 0 ? p.lateDays + ' วัน' : 'ไม่ค้าง';
+        document.getElementById('detLateDays').innerText = lateText;
+        document.getElementById('detLateDays').className = p.lateDays > 0 ? 'text-danger' : 'text-success';
+
+        let badgeClass = 'bg-warning-light'; 
+        let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
+        if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
+        else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง (เกินกำหนด)'; }
+        
+        const badge = document.getElementById('detStatusBadge');
+        badge.className = `badge ${badgeClass}`;
+        badge.innerText = statusText;
+
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+    function renderTablePage() {
+        const tbody = document.getElementById('patientTableBody');
+        const emptyState = document.getElementById('emptyState');
+        tbody.innerHTML = '';
+
+        if (currentFilteredData.length === 0) {
+            emptyState.style.display = 'block';
+            document.getElementById('patientTable').style.display = 'none';
+            return;
+        } else {
+            emptyState.style.display = 'none';
+            document.getElementById('patientTable').style.display = 'table';
+        }
+
+        const startIdx = (currentPage - 1) * rowsPerPage;
+        const pageData = currentFilteredData.slice(startIdx, startIdx + rowsPerPage);
+
+        pageData.forEach((p, idxInPage) => {
+            const actualIndex = startIdx + idxInPage; // อ้างอิง index จริงใน array เพื่อส่งไปแสดง Modal
             const tr = document.createElement('tr');
+            tr.onclick = () => openDetailModal(actualIndex);
             
             let badgeClass = 'bg-warning-light'; 
             let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
@@ -297,10 +725,10 @@
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
             let safeName = p.name;
-            if(safeName && safeName.toLowerCase() !== "#n/a") {
+            if(!showFullName && safeName && safeName.toLowerCase() !== "#n/a") {
                 let parts = safeName.trim().split(/\s+/);
-                if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "XX";
-            } else {
+                if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "***";
+            } else if (!safeName) {
                 safeName = "-";
             }
 
@@ -315,23 +743,55 @@
         });
     }
 
-    function renderCharts(mode, data) {
-        Object.values(charts).forEach(c => c && c.destroy());
-        const ctxBar = document.getElementById('barChart')?.getContext('2d');
-        const ctxPie = document.getElementById('pieChart')?.getContext('2d');
-        const ctxHist = document.getElementById('histChart')?.getContext('2d');
+    function renderPagination() {
+        const container = document.getElementById('paginationControls');
+        container.innerHTML = '';
         
-        if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ยังไม่ครบกำหนด', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].notDue) : [data.notDue], backgroundColor: '#f59e0b' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
-        
-        if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-        
-        if (ctxHist) {
-            const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
-            charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: '#6366f1' }] }, options: { responsive: true, maintainAspectRatio: false } });
-        }
+        const totalPages = Math.ceil(currentFilteredData.length / rowsPerPage);
+        if (totalPages <= 1) return; 
+
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn'; prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> ก่อนหน้า';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { currentPage--; renderTablePage(); renderPagination(); };
+        container.appendChild(prevBtn);
+
+        const pageInfo = document.createElement('span');
+        pageInfo.style.fontSize = '0.9rem'; pageInfo.style.color = 'var(--text-muted)';
+        pageInfo.innerText = `หน้า ${currentPage} จาก ${totalPages}`;
+        container.appendChild(pageInfo);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn'; nextBtn.innerHTML = 'ถัดไป <i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { currentPage++; renderTablePage(); renderPagination(); };
+        container.appendChild(nextBtn);
     }
 
-    window.onload = refreshData;
+    function exportToCSV() {
+        if(!isLoggedIn) return;
+        
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+        csvContent += "เดือน,HN,AN,ชื่อผู้ป่วย,วันที่ Admit,สถานะกำหนดส่ง,การส่งชาร์ท,วันค้าง\n";
+        
+        currentFilteredData.forEach(p => {
+            let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
+            if (p.isSent) statusText = 'ชาร์ทส่งแล้ว';
+            else if (p.isOverdue) statusText = 'ค้างส่ง';
+            
+            let row = `"${p.month}","${p.hn}","${p.an}","${p.name}","${p.admitDate}","${p.dueStatus}","${statusText}","${p.lateDays || 0}"`;
+            csvContent += row + "\n";
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `รายการผู้ป่วย_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
 </script>
 </body>
 </html>
