@@ -201,6 +201,10 @@
                 <span id="detAdmitDate">-</span>
             </div>
             <div class="detail-item">
+                <label>วันที่จำหน่าย</label>
+                <span id="detDischargeDate">-</span>
+            </div>
+            <div class="detail-item">
                 <label>ประจำเดือน</label>
                 <span id="detMonth" style="color: var(--primary);">-</span>
             </div>
@@ -305,6 +309,7 @@
                             <button id="btnToggleName" class="reveal-btn" onclick="toggleNameMask()" title="เปิด/ปิดการซ่อนชื่อ"><i class="fas fa-eye"></i></button>
                         </th>
                         <th class="sortable" onclick="handleSort('admitDate', this)">วันที่ Admit <i class="fas fa-sort"></i></th>
+                        <th class="sortable" onclick="handleSort('dischargeDate', this)">วันที่จำหน่าย <i class="fas fa-sort"></i></th>
                         <th>สถานะกำหนดส่ง</th>
                         <th>การส่งชาร์ท</th>
                         <th class="sortable" onclick="handleSort('lateDays', this)">วันค้าง <i class="fas fa-sort"></i></th>
@@ -649,8 +654,8 @@
         currentFilteredData.sort((a, b) => {
             let valA = a[sortCol] || ''; let valB = b[sortCol] || '';
             
-            // กรณีเรียงตามวันที่
-            if (sortCol === 'admitDate') {
+            // กรณีเรียงตามวันที่ (เพิ่ม dischargeDate)
+            if (sortCol === 'admitDate' || sortCol === 'dischargeDate') {
                 let dA = parseDateString(valA) || new Date(0);
                 let dB = parseDateString(valB) || new Date(0);
                 return sortAsc ? dA - dB : dB - dA;
@@ -691,6 +696,7 @@
         document.getElementById('detHN').innerText = 'HN: ' + p.hn;
         document.getElementById('detAN').innerText = 'AN: ' + p.an;
         document.getElementById('detAdmitDate').innerText = p.admitDate || '-';
+        document.getElementById('detDischargeDate').innerText = p.dischargeDate || '-';
         document.getElementById('detMonth').innerText = p.month || '-';
         document.getElementById('detDueStatus').innerText = p.dueStatus || '-';
         
@@ -751,7 +757,9 @@
 
             tr.innerHTML = `
                 <td><span style="font-size:0.8rem; color:var(--primary);">${p.month}</span></td>
-                <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td><td>${p.admitDate}</td>
+                <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td>
+                <td>${p.admitDate}</td>
+                <td>${p.dischargeDate || '-'}</td>
                 <td><span style="font-size:0.8rem; color:var(--text-muted);">${p.dueStatus}</span></td>
                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
                 <td class="${p.isOverdue ? 'text-danger' : ''}">${p.lateDays > 0 ? p.lateDays + ' วัน' : '-'}</td>
@@ -789,14 +797,14 @@
         if(!isLoggedIn) return;
         
         let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-        csvContent += "เดือน,HN,AN,ชื่อผู้ป่วย,วันที่ Admit,สถานะกำหนดส่ง,การส่งชาร์ท,วันค้าง\n";
+        csvContent += "เดือน,HN,AN,ชื่อผู้ป่วย,วันที่ Admit,วันที่จำหน่าย,สถานะกำหนดส่ง,การส่งชาร์ท,วันค้าง\n";
         
         currentFilteredData.forEach(p => {
             let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
             if (p.isSent) statusText = 'ชาร์ทส่งแล้ว';
             else if (p.isOverdue) statusText = 'ค้างส่ง';
             
-            let row = `"${p.month}","${p.hn}","${p.an}","${p.name}","${p.admitDate}","${p.dueStatus}","${statusText}","${p.lateDays || 0}"`;
+            let row = `"${p.month}","${p.hn}","${p.an}","${p.name}","${p.admitDate}","${p.dischargeDate || ''}","${p.dueStatus}","${statusText}","${p.lateDays || 0}"`;
             csvContent += row + "\n";
         });
         
