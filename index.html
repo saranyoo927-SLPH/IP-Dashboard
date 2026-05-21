@@ -3,652 +3,820 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLM Claim Dashboard - รพ.เสลภูมิ</title>
-    
-    <!-- นำเข้า Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- นำเข้า FontAwesome สำหรับ Icon -->
+    <title>IP Dashboard Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- นำเข้า React และ ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- นำเข้า Babel สำหรับคอมไพล์ JSX ในหน้าเว็บ -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-        
-        /* Custom Scrollbar สำหรับตารางและ Sidebar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2563eb;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+        /* CSS Variables for Light & Dark Mode */
+        :root { 
+            --primary: #6366f1; --primary-light: #e0e7ff; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; 
+            --bg: #f8fafc; --sidebar-bg: #ffffff; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; 
+            --border-color: #e2e8f0; --th-bg: #f8fafc; --tr-border: #f8fafc; --hover-bg: #f1f5f9;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); 
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        [data-theme="dark"] {
+            --bg: #0f172a; --sidebar-bg: #1e293b; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; 
+            --border-color: #334155; --th-bg: #0f172a; --tr-border: #1e293b; --hover-bg: #334155;
+            --primary-light: rgba(99, 102, 241, 0.2);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { background: var(--bg); color: var(--text-main); display: grid; grid-template-columns: 260px 1fr; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar & Responsive */
+        .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 2rem; z-index: 100;}
+        .brand { display: flex; align-items: center; gap: 12px; color: var(--primary); font-size: 1.25rem; font-weight: 600; }
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; flex: 1;}
+        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; transition: all 0.2s;}
+        .nav-item:hover { background: var(--hover-bg); color: var(--text-main); }
+        .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+        .bottom-actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 15px;}
+        
+        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90;}
+        
+        .content { height: 100vh; display: flex; flex-direction: column; padding: 1.5rem 2.5rem; gap: 1.5rem; overflow-y: auto; }
+        .view-section { display: none; flex-direction: column; gap: 1.5rem; }
+        .view-section.active { display: flex; }
+        header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; display: flex; align-items: center; gap: 10px;}
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        /* Inputs & Buttons */
+        select, input[type="text"], input[type="password"], input[type="date"] { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border-color); outline: none; font-size: 0.9rem; background: var(--card-bg); color: var(--text-main); }
+        .action-btn { padding: 8px 16px; border-radius: 10px; border:1px solid var(--border-color); cursor:pointer; background: var(--card-bg); font-size: 0.9rem; transition: 0.2s; color: var(--text-main); display: flex; align-items: center; gap: 5px;}
+        .action-btn:hover { background: var(--hover-bg); }
+        .btn-export { color: #10b981; border-color: #10b981; display: none; }
+        .btn-export:hover { background: rgba(16, 185, 129, 0.1); }
+        .reveal-btn { background: none; border: none; cursor: pointer; color: var(--primary); margin-left: 8px; display: none; font-size: 1rem;}
+        
+        .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; }
+        .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; border: 1px solid var(--border-color); }
+        .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+        .card-val { font-size: 1.75rem; font-weight: 700; color: var(--text-main); }
+        
+        .charts-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; flex: 1; min-height: 350px;}
+        .chart-card { background: var(--card-bg); padding: 1.5rem; border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; border: 1px solid var(--border-color);}
+        .chart-wrapper { flex: 1; position: relative; min-height: 250px;}
+        .full-width { grid-column: span 2; }
+        
+        /* Table Styles */
+        .table-container { background: var(--card-bg); border-radius: 15px; padding: 10px; overflow-x: auto; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { text-align: left; padding: 12px; background: var(--th-bg); color: var(--text-muted); border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        th.sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
+        th.sortable:hover { background: var(--hover-bg); color: var(--text-main); }
+        th i { margin-left: 5px; font-size: 0.8rem; color: var(--text-muted); opacity: 0.5; }
+        th.sortable.active-sort i { color: var(--primary); opacity: 1; }
+        td { padding: 12px; border-bottom: 1px solid var(--tr-border); font-size: 0.9rem; color: var(--text-main); }
+        tbody tr { cursor: pointer; transition: background 0.2s; }
+        tbody tr:hover { background: var(--hover-bg); }
+        
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .text-danger { color: var(--danger); } .text-success { color: var(--success); }
+        [data-theme="light"] .bg-success-light { background: #dcfce7; color: var(--success); } 
+        [data-theme="light"] .bg-danger-light { background: #fee2e2; color: var(--danger); } 
+        [data-theme="light"] .bg-warning-light { background: #fef3c7; color: var(--warning); }
+        [data-theme="dark"] .bg-success-light { background: rgba(16,185,129,0.2); color: #34d399; } 
+        [data-theme="dark"] .bg-danger-light { background: rgba(239,68,68,0.2); color: #f87171; } 
+        [data-theme="dark"] .bg-warning-light { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        
+        /* Empty State & Pagination */
+        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); display: none; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+        .page-btn { padding: 6px 12px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); cursor: pointer; border-radius: 8px; font-size: 0.9rem; transition: 0.2s; }
+        .page-btn:hover:not(:disabled) { background: var(--hover-bg); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        #loader { position: fixed; inset: 0; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; opacity: 0.9; }
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 20px; width: 350px; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--border-color); position: relative; }
+        .modal-content.large { width: 500px; max-width: 90vw; }
+        .modal-header { text-align: center; margin-bottom: 10px; }
+        .modal-header h3 { color: var(--text-main); font-size: 1.4rem; margin-bottom: 5px; }
+        .modal-header p { color: var(--text-muted); font-size: 0.9rem; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+        .btn-cancel { background: var(--hover-bg); color: var(--text-main); }
+        .btn-cancel:hover { filter: brightness(0.95); }
+        .btn-login { background: var(--primary); color: white; }
+        .btn-login:hover { background: #4f46e5; }
+        .error-msg { color: var(--danger); font-size: 0.85rem; text-align: center; display: none; background: rgba(239,68,68,0.1); padding: 8px; border-radius: 8px; }
+        .close-modal-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        .close-modal-btn:hover { color: var(--danger); }
+
+        /* Patient Detail Grid */
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;}
+        .detail-item { background: var(--bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .detail-item label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .detail-item span { display: block; font-weight: 500; color: var(--text-main); font-size: 1rem; }
+        .detail-item.full-width { grid-column: span 2; }
+
+        /* Responsive Breakpoints */
+        #mobileMenuBtn { display: none; }
+        .date-filter-group { display: flex; align-items: center; gap: 5px; }
+        
+        @media (max-width: 1024px) {
+            .stat-grid { grid-template-columns: repeat(3, 1fr); }
+            .charts-container { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+        @media (max-width: 768px) {
+            body { grid-template-columns: 1fr; }
+            .sidebar { position: fixed; height: 100vh; left: -280px; width: 260px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
+            .sidebar.active { left: 0; }
+            .mobile-overlay.active { display: block; }
+            #mobileMenuBtn { display: flex; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-actions { width: 100%; justify-content: flex-start; }
+            .date-filter-group { width: 100%; justify-content: space-between; }
+        }
+        @media (max-width: 480px) {
+            .stat-grid { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-item.full-width { grid-column: span 1; }
+        }
+
+        /* Print Settings */
+        @media print {
+            .sidebar, .header-actions, #loginModal, #detailModal, #loader, .pagination, #mobileMenuBtn { display: none !important; }
+            body { grid-template-columns: 1fr; overflow: visible; height: auto; background: white; color: black; }
+            .content { height: auto; overflow: visible; padding: 0; }
+            .chart-card, .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            table { font-size: 10pt; }
+            th, td { padding: 8px; border-color: #ddd; }
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased overflow-hidden">
-    <div id="root"></div>
+<body data-theme="light">
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+<!-- Loader -->
+<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังวิเคราะห์ข้อมูล...</p></div>
 
-        // URL ของ API จาก Google Apps Script (ดึงข้อมูล Data & Statement)
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx0PKi_rileifhE0y-43sTRfPbY0Ok9nyqowcGwF1Tiveplfr2LGg1ttc-TFiPNuXeU/exec"; 
-        
-        function App() {
-            const [currentView, setCurrentView] = useState('dashboard');
-            const [isAdmin, setIsAdmin] = useState(false);
-            const [isSidebarOpen, setIsSidebarOpen] = useState(true); // ควบคุม Sidebar บนมือถือ
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-modal-btn" onclick="closeLogin()"><i class="fas fa-times"></i></button>
+        <div class="modal-header">
+            <h3><i class="fas fa-lock" style="color: var(--primary); margin-right: 8px;"></i>เข้าสู่ระบบ</h3>
+            <p>สิทธิ์เฉพาะเจ้าหน้าที่ที่เกี่ยวข้อง</p>
+        </div>
+        <div id="loginError" class="error-msg">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!</div>
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="usernameInput" placeholder="กรอกชื่อผู้ใช้" autocomplete="off">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="passwordInput" placeholder="กรอกรหัสผ่าน" autocomplete="new-password">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-login" onclick="attemptLogin()" style="width: 100%;">เข้าสู่ระบบ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Detail Modal -->
+<div id="detailModal" class="modal-overlay">
+    <div class="modal-content large">
+        <button class="close-modal-btn" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
+        <div class="modal-header" style="text-align: left; margin-bottom: 0;">
+            <h3 id="detName">ชื่อผู้ป่วย</h3>
+            <p><span id="detHN">HN</span> | <span id="detAN">AN</span></p>
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <label>วันที่ Admit</label>
+                <span id="detAdmitDate">-</span>
+            </div>
+            <div class="detail-item">
+                <label>วันที่จำหน่าย</label>
+                <span id="detDischargeDate">-</span>
+            </div>
+            <div class="detail-item">
+                <label>ประจำเดือน</label>
+                <span id="detMonth" style="color: var(--primary);">-</span>
+            </div>
+            <div class="detail-item">
+                <label>สถานะกำหนดส่ง</label>
+                <span id="detDueStatus">-</span>
+            </div>
+            <div class="detail-item">
+                <label>จำนวนวันค้างส่ง</label>
+                <span id="detLateDays" class="text-danger">-</span>
+            </div>
+            <div class="detail-item full-width">
+                <label>การส่งชาร์ท</label>
+                <span id="detStatusBadge" class="badge">รอส่ง</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
+    <nav class="nav-menu">
+        <button class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard Overview</span></button>
+        <button class="nav-item" id="nav-patients" onclick="switchView('patients', this)">
+            <i class="fas fa-id-card"></i><span>Patient Records</span>
+            <i class="fas fa-lock" id="lockIcon" style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);"></i>
+        </button>
+    </nav>
+    <div class="bottom-actions">
+        <!-- Dark Mode Toggle -->
+        <button class="nav-item" onclick="toggleDarkMode()">
+            <i class="fas fa-moon" id="themeIcon"></i><span id="themeText">โหมดกลางคืน</span>
+        </button>
+        <!-- Logout Button -->
+        <button class="nav-item" id="btnLogout" onclick="logout()" style="display: none; color: var(--danger);">
+            <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
+        </button>
+    </div>
+</aside>
+
+<main class="content">
+    <section id="view-dashboard" class="view-section active">
+        <header>
+            <h2>
+                <button id="mobileMenuBtn" class="action-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                วิเคราะห์สถิติภาพรวม
+            </h2>
+            <div class="header-actions">
+                <select id="monthSelect" onchange="updateView()"><option value="all">แสดงข้อมูลทุกเดือน</option></select>
+                <button onclick="window.print()" class="action-btn" title="พิมพ์รายงาน"><i class="fas fa-print"></i></button>
+                <button onclick="refreshData()" class="action-btn" title="รีเฟรชข้อมูล"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </header>
+
+        <div class="stat-grid">
+            <div class="card"><span class="card-label">ผู้ป่วยรวม</span><div class="card-val" id="stat-total">0</div></div>
+            <div class="card"><span class="card-label">ครบกำหนดส่ง</span><div class="card-val" id="stat-due">0</div></div>
+            <div class="card"><span class="card-label">ยังไม่ครบกำหนด</span><div class="card-val" id="stat-notDue">0</div></div>
+            <div class="card"><span class="card-label">ส่งประกันแล้ว</span><div class="card-val text-success" id="stat-insSent">0</div></div>
+            <div class="card"><span class="card-label">ค้างส่ง (เกินกำหนด)</span><div class="card-val text-danger" id="stat-dueNotSent">0</div></div>
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-card"><h3>สถิตินำส่งรายเดือน</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
+            <div class="chart-card"><h3>ประสิทธิภาพเวลา</h3><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
+            <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า (เฉพาะชาร์ทที่ส่งแล้ว)</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
+        </div>
+    </section>
+
+    <section id="view-patients" class="view-section">
+        <header>
+            <h2>
+                <button id="mobileMenuBtn" class="action-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                รายการข้อมูลผู้ป่วย
+            </h2>
+            <div class="header-actions">
+                <input type="text" id="patientSearch" placeholder="ค้นหา HN, AN หรือชื่อ..." onkeyup="handleSearchInput()">
+                <select id="statusFilter" onchange="handleTableChange()">
+                    <option value="all">ทุกสถานะชาร์ท</option>
+                    <option value="ส่งแล้ว">ชาร์ทส่งแล้ว</option>
+                    <option value="เกินกำหนด">ค้างส่ง (เกินกำหนด)</option>
+                    <option value="รอส่ง">รอส่ง</option>
+                </select>
+                <!-- Date Range Filter -->
+                <div class="date-filter-group" title="กรองตามวันที่ Admit">
+                    <input type="date" id="startDate" onchange="handleTableChange()">
+                    <span style="color:var(--text-muted)">ถึง</span>
+                    <input type="date" id="endDate" onchange="handleTableChange()">
+                </div>
+                <button class="action-btn btn-export" id="btnExport" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> ส่งออก</button>
+            </div>
+        </header>
+        <div class="table-container">
+            <table id="patientTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" onclick="handleSort('month', this)">เดือน <i class="fas fa-sort"></i></th>
+                        <th class="sortable" onclick="handleSort('hn', this)">HN <i class="fas fa-sort"></i></th>
+                        <th class="sortable" onclick="handleSort('an', this)">AN <i class="fas fa-sort"></i></th>
+                        <th>
+                            ชื่อผู้ป่วย 
+                            <button id="btnToggleName" class="reveal-btn" onclick="toggleNameMask()" title="เปิด/ปิดการซ่อนชื่อ"><i class="fas fa-eye"></i></button>
+                        </th>
+                        <th class="sortable" onclick="handleSort('admitDate', this)">วันที่ Admit <i class="fas fa-sort"></i></th>
+                        <th class="sortable" onclick="handleSort('dischargeDate', this)">วันที่จำหน่าย <i class="fas fa-sort"></i></th>
+                        <th>สถานะกำหนดส่ง</th>
+                        <th>การส่งชาร์ท</th>
+                        <th class="sortable" onclick="handleSort('lateDays', this)">วันค้าง <i class="fas fa-sort"></i></th>
+                    </tr>
+                </thead>
+                <tbody id="patientTableBody"></tbody>
+            </table>
             
-            const [username, setUsername] = useState('');
-            const [password, setPassword] = useState('');
-            const [loginError, setLoginError] = useState('');
-            const [searchQuery, setSearchQuery] = useState('');
+            <div id="emptyState" class="empty-state">
+                <i class="fas fa-box-open" style="font-size: 3rem; color: var(--border-color); margin-bottom: 15px; display: block;"></i>
+                <h3 style="color: var(--text-main); margin-bottom: 5px;">ไม่พบข้อมูล</h3>
+                <p>ลองเปลี่ยนคำค้นหา หรือช่วงวันที่ดูใหม่</p>
+            </div>
 
-            // Data State
-            const [mockData, setMockData] = useState([]);
-            const [mockStatement, setMockStatement] = useState([]);
-            const [isLoading, setIsLoading] = useState(true);
-            const [fetchError, setFetchError] = useState('');
+            <div class="pagination" id="paginationControls"></div>
+        </div>
+    </section>
+</main>
 
-            // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
-            useEffect(() => {
-                const fetchData = async () => {
-                    try {
-                        const response = await fetch(GAS_API_URL);
-                        const result = await response.json();
-                        
-                        setMockData(result.data || []);
-                        setMockStatement(result.statement || []);
-                        setIsLoading(false);
-                    } catch (error) {
-                        console.error("Error fetching data:", error);
-                        setFetchError(error.message || "ไม่สามารถดึงข้อมูลได้ กรุณาตรวจสอบการเชื่อมต่อ");
-                        setIsLoading(false);
-                    }
-                };
+<script>
+    let dbData = null; let charts = {};
+    
+    // สถานะระบบ
+    let isLoggedIn = false;
+    let pendingElement = null; 
+    let inactivityTimer = null;
+    let showFullName = false;
+    let isDarkMode = false;
 
-                fetchData();
-                
-                // ตรวจสอบขนาดหน้าจอเพื่อซ่อน Sidebar บนมือถืออัตโนมัติ
-                if (window.innerWidth < 1024) {
-                    setIsSidebarOpen(false);
-                }
-            }, []);
+    // สถานะตาราง
+    let currentFilteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 50; 
+    let sortCol = '';
+    let sortAsc = true;
+    
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if (username === 'admin' && password === '1234') {
-                    setIsAdmin(true);
-                    setCurrentView('individual-check');
-                    setLoginError('');
-                } else {
-                    setLoginError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (ทดสอบใช้: admin / 1234)');
-                }
-            };
+    // ---------------- Initialization & Theme ---------------- //
 
-            const handleLogout = () => {
-                setIsAdmin(false);
-                setCurrentView('dashboard');
-                setUsername('');
-                setPassword('');
-                setSearchQuery('');
-            };
+    window.onload = () => {
+        // Load Theme preference
+        const savedTheme = localStorage.getItem('ipDashboardTheme');
+        if (savedTheme === 'dark') {
+            toggleDarkMode(true); // force dark mode
+        }
+        refreshData();
+    };
 
-            const formatCurrency = (amount) => {
-                return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount || 0);
-            };
+    function toggleDarkMode(forceDark = null) {
+        const body = document.body;
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+        
+        if (forceDark === true || (forceDark === null && body.getAttribute('data-theme') === 'light')) {
+            body.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+            text.innerText = 'โหมดสว่าง';
+            isDarkMode = true;
+            localStorage.setItem('ipDashboardTheme', 'dark');
+            Chart.defaults.color = '#94a3b8'; // เปลี่ยนสีตัวหนังสือในกราฟ
+        } else {
+            body.setAttribute('data-theme', 'light');
+            icon.className = 'fas fa-moon';
+            text.innerText = 'โหมดกลางคืน';
+            isDarkMode = false;
+            localStorage.setItem('ipDashboardTheme', 'light');
+            Chart.defaults.color = '#64748b';
+        }
+        
+        // Redraw charts if data exists
+        if(dbData) updateView();
+    }
 
-            const dashboardStats = useMemo(() => {
-                const totalRecords = mockData.length;
-                let totalClaim = 0;
-                let totalPaid = 0;
-                let successCount = 0;
-                let pendingCount = 0;
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('mobileOverlay').classList.toggle('active');
+    }
 
-                mockData.forEach(item => {
-                    // แปลงค่าให้เป็นตัวเลขที่ถูกต้อง ป้องกัน NaN
-                    const claimVal = parseFloat(item.claim) || 0;
-                    const paidVal = parseFloat(item.paid) || 0;
-                    totalClaim += claimVal;
-                    totalPaid += paidVal;
-                    
-                    if (item.status && item.status.includes("ได้รับชดเชยแล้ว")) successCount++;
-                    if (item.status && (item.status.includes("ยังไม่ได้รับชดเชย") || item.status.includes("รอ") || item.status.includes("#N/A"))) pendingCount++;
-                });
+    // ---------------- Security & Session ---------------- //
 
-                return { totalRecords, totalClaim, totalPaid, successCount, pendingCount };
-            }, [mockData]);
+    document.getElementById('passwordInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') attemptLogin();
+    });
 
-            // --- Sidebar Component ---
-            const renderSidebar = () => (
-                <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transition-transform duration-300 ease-in-out transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-auto flex flex-col shadow-2xl`}>
-                    <div className="flex items-center justify-center h-20 border-b border-slate-800 bg-slate-900/50">
-                        <div className="flex items-center px-4">
-                            <div className="bg-blue-600 text-white p-2.5 rounded-xl mr-3 shadow-lg shadow-blue-900/20">
-                                <i className="fa-solid fa-heart-pulse text-xl"></i>
-                            </div>
-                            <div>
-                                <h1 className="text-white font-bold text-lg leading-tight tracking-wide">TLM Claim</h1>
-                                <p className="text-blue-400 text-xs font-medium">รพ.เสลภูมิ</p>
-                            </div>
-                        </div>
-                        {/* ปุ่มปิด Sidebar บนมือถือ */}
-                        <button className="lg:hidden absolute right-4 text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
-                            <i className="fa-solid fa-xmark text-xl"></i>
-                        </button>
-                    </div>
+    window.addEventListener('mousemove', resetInactivityTimer);
+    window.addEventListener('keypress', resetInactivityTimer);
+    window.addEventListener('scroll', resetInactivityTimer);
 
-                    <div className="flex flex-col flex-1 overflow-y-auto py-6 px-4 space-y-2">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-2">เมนูหลัก (Main Menu)</p>
-                        
-                        <button 
-                            onClick={() => { setCurrentView('dashboard'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }}
-                            className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${currentView === 'dashboard' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'hover:bg-slate-800 hover:text-white'}`}
-                        >
-                            <i className="fa-solid fa-chart-pie w-6"></i> ภาพรวมข้อมูล
-                        </button>
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        if (isLoggedIn) {
+            inactivityTimer = setTimeout(() => {
+                alert("หมดเวลาเชื่อมต่อระบบ เพื่อความปลอดภัยระบบได้ทำการออกจากระบบอัตโนมัติ");
+                logout();
+            }, 15 * 60 * 1000); // 15 mins
+        }
+    }
 
-                        <button 
-                            onClick={() => { 
-                                if(isAdmin) {
-                                    setCurrentView('individual-check');
-                                } else {
-                                    setCurrentView('admin-login');
-                                }
-                                if(window.innerWidth < 1024) setIsSidebarOpen(false);
-                            }}
-                            className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${currentView === 'individual-check' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'hover:bg-slate-800 hover:text-white'} ${(currentView === 'admin-login' && !isAdmin) ? 'bg-slate-800 text-white border border-slate-700' : ''}`}
-                        >
-                            <i className="fa-solid fa-magnifying-glass w-6"></i> ตรวจสอบรายบุคคล
-                            {!isAdmin && <i className="fa-solid fa-lock text-xs ml-auto text-slate-500"></i>}
-                        </button>
-                    </div>
+    function closeLogin() {
+        document.getElementById('loginModal').classList.remove('active');
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('passwordInput').value = '';
+    }
 
-                    <div className="p-4 border-t border-slate-800 bg-slate-900">
-                        {isAdmin ? (
-                            <div className="bg-slate-800 rounded-xl p-4">
-                                <div className="flex items-center mb-3">
-                                    <div className="bg-emerald-500/20 text-emerald-400 w-8 h-8 rounded-full flex items-center justify-center mr-3">
-                                        <i className="fa-solid fa-user-shield"></i>
-                                    </div>
-                                    <div>
-                                        <p className="text-white text-sm font-medium">Admin Mode</p>
-                                        <p className="text-emerald-400 text-xs">ยืนยันสิทธิ์แล้ว</p>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center justify-center px-4 py-2 text-sm text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20"
-                                >
-                                    <i className="fa-solid fa-arrow-right-from-bracket mr-2"></i> ออกจากระบบ
-                                </button>
-                            </div>
-                        ) : (
-                            <button 
-                                onClick={() => { setCurrentView('admin-login'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }}
-                                className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700"
-                            >
-                                <i className="fa-solid fa-shield-halved mr-2"></i> เข้าสู่ระบบ Admin
-                            </button>
-                        )}
-                    </div>
-                </aside>
-            );
+    function attemptLogin() {
+        const user = document.getElementById('usernameInput').value;
+        const pass = document.getElementById('passwordInput').value;
 
-            // --- Header Component ---
-            const renderHeader = () => (
-                <header className="bg-white h-20 px-6 border-b border-slate-200 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-                    <div className="flex items-center">
-                        <button 
-                            className="lg:hidden mr-4 text-slate-500 hover:text-blue-600 focus:outline-none"
-                            onClick={() => setIsSidebarOpen(true)}
-                        >
-                            <i className="fa-solid fa-bars text-2xl"></i>
-                        </button>
-                        <div>
-                            <h2 className="text-xl font-bold text-slate-800 hidden sm:block">
-                                {currentView === 'dashboard' && 'แดชบอร์ดรายงานภาพรวม (Dashboard)'}
-                                {currentView === 'admin-login' && 'การยืนยันตัวตนผู้ดูแลระบบ (Admin Login)'}
-                                {currentView === 'individual-check' && 'ตรวจสอบข้อมูลเบิกจ่ายรายบุคคล'}
-                            </h2>
-                            <p className="text-sm text-slate-500 hidden sm:block">ระบบจัดการและติดตามการเบิกจ่ายชดเชย กรณีให้เลือดผู้ป่วยธาลัสซีเมีย</p>
-                            
-                            {/* Mobile Title */}
-                            <h2 className="text-lg font-bold text-slate-800 sm:hidden">
-                                TLM Claim Dashboard
-                            </h2>
-                        </div>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="hidden md:flex items-center text-sm text-slate-500 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-                            <i className="fa-regular fa-calendar-check mr-2 text-blue-500"></i>
-                            ข้อมูลอัปเดตอัตโนมัติจาก Google Sheets
-                        </div>
-                    </div>
-                </header>
-            );
+        if (user === 'admin' && pass === '1234') {
+            isLoggedIn = true;
+            closeLogin();
+            
+            document.getElementById('usernameInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('lockIcon').className = 'fas fa-unlock'; 
+            document.getElementById('btnLogout').style.display = 'flex';
+            document.getElementById('btnExport').style.display = 'inline-block';
+            document.getElementById('btnToggleName').style.display = 'inline-block';
 
-            // --- Dashboard View ---
-            const renderDashboard = () => (
-                <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
-                    
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-500 mb-1">ยอดขอเบิกทั้งหมด</p>
-                                    <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{formatCurrency(dashboardStats.totalClaim)}</h3>
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                                    <i className="fa-solid fa-file-invoice-dollar text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
+            resetInactivityTimer();
 
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-500 mb-1">ยอดจ่ายชดเชยแล้ว</p>
-                                    <h3 className="text-3xl font-bold text-emerald-600 tracking-tight">{formatCurrency(dashboardStats.totalPaid)}</h3>
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                                    <i className="fa-solid fa-hand-holding-dollar text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
+            if (pendingElement) {
+                switchView('patients', pendingElement);
+                pendingElement = null;
+            }
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    }
 
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-green-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-500 mb-1">รายการที่สำเร็จ</p>
-                                    <div className="flex items-baseline">
-                                        <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{dashboardStats.successCount}</h3>
-                                        <span className="text-sm text-slate-500 ml-2">รายการ</span>
-                                    </div>
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                                    <i className="fa-solid fa-circle-check text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
+    function logout() {
+        isLoggedIn = false;
+        showFullName = false;
+        document.getElementById('lockIcon').className = 'fas fa-lock'; 
+        document.getElementById('btnLogout').style.display = 'none';
+        document.getElementById('btnExport').style.display = 'none';
+        document.getElementById('btnToggleName').style.display = 'none';
+        document.querySelector('#btnToggleName i').className = 'fas fa-eye';
+        
+        clearTimeout(inactivityTimer);
+        closeDetailModal();
+        switchView('dashboard', document.getElementById('nav-dashboard'));
+        if(currentFilteredData.length > 0) renderTablePage();
+    }
 
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-shadow">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-500 mb-1">รอชดเชย / ไม่พบข้อมูล</p>
-                                    <div className="flex items-baseline">
-                                        <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{dashboardStats.pendingCount}</h3>
-                                        <span className="text-sm text-slate-500 ml-2">รายการ</span>
-                                    </div>
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                                    <i className="fa-solid fa-clock-rotate-left text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    // ---------------- Navigation & Fetch Data ---------------- //
 
-                    {/* Table Section */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-                        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                            <h3 className="text-lg font-bold text-slate-800 flex items-center">
-                                <i className="fa-solid fa-list-ul mr-3 text-blue-500"></i> รายการขอเบิก 10 รายการล่าสุด
-                            </h3>
-                            <span className="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-200">
-                                ดึงข้อมูลจากชีต Data
-                            </span>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-slate-200">
-                                <thead className="bg-slate-50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">วันที่รับบริการ</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">ชื่อ - นามสกุล</th>
-                                        <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">ขอเบิก</th>
-                                        <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">ชดเชย</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">สถานะ</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-slate-100">
-                                    {mockData.slice(0, 10).map((row, idx) => {
-                                        const isSuccess = row.status && row.status.includes('ได้รับชดเชยแล้ว');
-                                        return (
-                                        <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{row.date}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs mr-3">
-                                                        {row.name ? row.name.charAt(0) : '?'}
-                                                    </div>
-                                                    <span className="text-sm font-semibold text-slate-800">{row.name}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500">{formatCurrency(row.claim)}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-emerald-600">{formatCurrency(row.paid)}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className={`px-3 py-1.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${
-                                                    isSuccess ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'
-                                                }`}>
-                                                    <i className={`fa-solid ${isSuccess ? 'fa-check' : 'fa-triangle-exclamation'} mr-1.5 mt-0.5`}></i>
-                                                    {row.status || 'รอตรวจสอบ'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    )})}
-                                    {mockData.length === 0 && (
-                                        <tr>
-                                            <td colSpan="5" className="px-6 py-10 text-center text-slate-500">
-                                                <i className="fa-solid fa-folder-open text-3xl mb-3 text-slate-300"></i>
-                                                <p>ไม่พบข้อมูล หรือกำลังเชื่อมต่อระบบ...</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            // --- Admin Login View ---
-            const renderLogin = () => (
-                <div className="flex items-center justify-center min-h-[60vh] animate-[fadeIn_0.3s_ease-out]">
-                    <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-lg border border-slate-100 w-full max-w-md">
-                        <div className="text-center mb-8">
-                            <div className="mx-auto bg-slate-900 w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-slate-900/20">
-                                <i className="fa-solid fa-shield-halved text-white text-3xl"></i>
-                            </div>
-                            <h2 className="text-2xl font-bold text-slate-900">Admin Login</h2>
-                            <p className="text-sm text-slate-500 mt-2">กรุณาเข้าสู่ระบบเพื่อใช้งานเมนูตรวจสอบรายบุคคล</p>
-                        </div>
-
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            {loginError && (
-                                <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm flex items-start border border-red-100">
-                                    <i className="fa-solid fa-circle-exclamation mt-0.5 mr-2"></i> 
-                                    <span>{loginError}</span>
-                                </div>
-                            )}
-                            
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">Username</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                        <i className="fa-solid fa-user"></i>
-                                    </div>
-                                    <input 
-                                        type="text" 
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-800"
-                                        placeholder="กรอกชื่อผู้ใช้งาน..."
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                        <i className="fa-solid fa-lock"></i>
-                                    </div>
-                                    <input 
-                                        type="password" 
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-800"
-                                        placeholder="••••••••"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <button 
-                                type="submit" 
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md shadow-blue-600/20 mt-4"
-                            >
-                                เข้าสู่ระบบ (Login)
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            );
-
-            // --- Individual Check View ---
-            const renderIndividualCheck = () => {
-                const filteredData = mockData.filter(item => 
-                    (item.cid && item.cid.includes(searchQuery)) || (item.name && item.name.includes(searchQuery))
-                );
-                
-                const filteredStatement = mockStatement.filter(item => 
-                    (item.cid && item.cid.includes(searchQuery)) || (item.name && item.name.includes(searchQuery))
-                );
-
-                const hasSearched = searchQuery.trim().length >= 2;
-
-                return (
-                    <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
-                        
-                        {/* Search Box */}
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
-                            <h2 className="text-xl font-bold text-slate-800 mb-2">ค้นหาประวัติการเบิกจ่ายชดเชย</h2>
-                            <p className="text-sm text-slate-500 mb-6">คุณสามารถค้นหาด้วยเลขบัตรประชาชน 13 หลัก (CID) หรือ ชื่อ-นามสกุล ของผู้ป่วย</p>
-                            
-                            <div className="relative max-w-3xl">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <i className="fa-solid fa-magnifying-glass text-slate-400 text-lg"></i>
-                                </div>
-                                <input
-                                    type="text"
-                                    className="block w-full pl-12 pr-12 py-4 border-2 border-slate-200 rounded-2xl leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-base transition-all"
-                                    placeholder="กรอกชื่อ-สกุล หรือ CID อย่างน้อย 3 ตัวอักษร..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                                {searchQuery && (
-                                    <button 
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-red-500 transition-colors"
-                                    >
-                                        <i className="fa-solid fa-circle-xmark text-xl"></i>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Search Results */}
-                        {hasSearched && (
-                            <div className="grid grid-cols-1 gap-6 mt-6">
-                                
-                                {/* 1. Data Summary Table */}
-                                <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-blue-100 bg-blue-50/80 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                                        <h3 className="text-lg font-bold text-blue-900 flex items-center">
-                                            <i className="fa-solid fa-file-lines mr-2 text-blue-600"></i> สรุปข้อมูลขอเบิก (จากไฟล์ Data)
-                                        </h3>
-                                        <span className="text-xs font-semibold bg-white text-blue-600 px-3 py-1 rounded-full border border-blue-200 shadow-sm">
-                                            พบ {filteredData.length} รายการ
-                                        </span>
-                                    </div>
-                                    
-                                    {filteredData.length > 0 ? (
-                                        <div className="overflow-x-auto">
-                                            <table className="min-w-full divide-y divide-slate-200">
-                                                <thead className="bg-white">
-                                                    <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">CID</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">ชื่อ - นามสกุล</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">วันที่รับบริการ</th>
-                                                        <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">ขอเบิก</th>
-                                                        <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">ชดเชย</th>
-                                                        <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">สถานะ</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white divide-y divide-slate-100">
-                                                    {filteredData.map((row, idx) => {
-                                                        const isSuccess = row.status && row.status.includes('ได้รับชดเชยแล้ว');
-                                                        return(
-                                                        <tr key={idx} className="hover:bg-slate-50">
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-500">{row.cid}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">{row.name}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{row.date}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500">{formatCurrency(row.claim)}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-slate-800">{formatCurrency(row.paid)}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                                <span className={`px-3 py-1.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${
-                                                                    isSuccess ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'
-                                                                }`}>
-                                                                    {row.status}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    )})}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ) : (
-                                        <div className="p-10 text-center text-slate-500 bg-slate-50">
-                                            <i className="fa-regular fa-folder-open text-4xl text-slate-300 mb-3"></i>
-                                            <p>ไม่พบประวัติการขอเบิกสำหรับคำค้นหานี้</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* 2. Statement Details Table */}
-                                <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/80 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                                        <h3 className="text-lg font-bold text-emerald-900 flex items-center">
-                                            <i className="fa-solid fa-money-bill-transfer mr-2 text-emerald-600"></i> รายละเอียด Statement (เงินโอน)
-                                        </h3>
-                                        <span className="text-xs font-semibold bg-white text-emerald-600 px-3 py-1 rounded-full border border-emerald-200 shadow-sm">
-                                            พบ {filteredStatement.length} รายการ
-                                        </span>
-                                    </div>
-                                    
-                                    {filteredStatement.length > 0 ? (
-                                        <div className="overflow-x-auto">
-                                            <table className="min-w-full divide-y divide-slate-200">
-                                                <thead className="bg-white">
-                                                    <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Rep No. (งวด)</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">วันที่รับบริการ</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">สิทธิ์</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">รายการเบิก</th>
-                                                        <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">ยอดขอเบิก</th>
-                                                        <th className="px-6 py-3 text-right text-xs font-bold text-emerald-600 uppercase tracking-wider">จ่ายชดเชยสุทธิ</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white divide-y divide-slate-100">
-                                                    {filteredStatement.map((row, idx) => (
-                                                        <tr key={idx} className="hover:bg-slate-50">
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-slate-500">{row.repNo}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800">{row.date}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                                <span className="px-2 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded text-xs font-bold">
-                                                                    {row.right}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-sm text-slate-700 max-w-xs truncate" title={row.item}>{row.item}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500">{formatCurrency(row.claim)}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-emerald-600 bg-emerald-50/30">{formatCurrency(row.paid)}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ) : (
-                                        <div className="p-10 text-center text-slate-500 bg-slate-50">
-                                            <i className="fa-solid fa-receipt text-4xl text-slate-300 mb-3"></i>
-                                            <p>ไม่พบรายการเงินโอน (Statement) สำหรับคำค้นหานี้</p>
-                                            <p className="text-xs text-slate-400 mt-1">*เคสนี้อาจอยู่ระหว่างรอการโอนเงินจากส่วนกลาง</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
-            return (
-                <div className="flex h-screen bg-slate-50 font-sans">
-                    {/* Sidebar Area */}
-                    {renderSidebar()}
-
-                    {/* Overlay สำหรับมือถือเมื่อเปิด Sidebar */}
-                    {isSidebarOpen && (
-                        <div 
-                            className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden"
-                            onClick={() => setIsSidebarOpen(false)}
-                        ></div>
-                    )}
-
-                    {/* Main Content Area */}
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                        {renderHeader()}
-
-                        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
-                            {isLoading ? (
-                                <div className="flex flex-col items-center justify-center h-full min-h-[50vh]">
-                                    <div className="loader mb-4"></div>
-                                    <p className="text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูลจากฐานข้อมูล...</p>
-                                </div>
-                            ) : fetchError ? (
-                                <div className="bg-red-50 text-red-600 p-8 rounded-2xl border border-red-200 text-center max-w-2xl mx-auto mt-10 shadow-sm">
-                                    <i className="fa-solid fa-triangle-exclamation text-5xl mb-4 text-red-400"></i>
-                                    <h3 className="text-xl font-bold mb-2">เกิดข้อผิดพลาดในการเชื่อมต่อ</h3>
-                                    <p className="text-slate-700">{fetchError}</p>
-                                    <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 font-medium text-slate-700 transition-colors">
-                                        ลองใหม่อีกครั้ง
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="max-w-7xl mx-auto pb-10">
-                                    {currentView === 'dashboard' && renderDashboard()}
-                                    {currentView === 'admin-login' && renderLogin()}
-                                    {currentView === 'individual-check' && (
-                                        isAdmin ? renderIndividualCheck() : renderLogin()
-                                    )}
-                                </div>
-                            )}
-                        </main>
-                    </div>
-                </div>
-            );
+    function switchView(viewId, element) {
+        if (viewId === 'patients' && !isLoggedIn) {
+            pendingElement = element;
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('usernameInput').focus();
+            
+            // Close mobile menu if open
+            if(window.innerWidth <= 768) toggleSidebar();
+            return; 
         }
 
-        // เพิ่ม Style Keyframes สำหรับ Animation
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(style);
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); 
+        if(element) element.classList.add('active');
+        
+        document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); 
+        document.getElementById('view-' + viewId).classList.add('active');
+        
+        // Close mobile menu when navigating
+        if(window.innerWidth <= 768) toggleSidebar();
+        
+        if (viewId === 'dashboard') updateView();
+    }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    async function refreshData() {
+        document.getElementById('loader').style.display = 'flex';
+        try {
+            const response = await fetch(scriptURL);
+            dbData = await response.json();
+            
+            if(dbData.status === "error") {
+                alert("เกิดข้อผิดพลาดจาก Google Sheet: \n" + dbData.message);
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+            
+            const sel = document.getElementById('monthSelect');
+            sel.innerHTML = '<option value="all">แสดงข้อมูลทุกเดือน</option>';
+            if(dbData.months && dbData.months.length > 0) {
+                dbData.months.forEach(m => { let opt = document.createElement('option'); opt.value = m; opt.innerText = m; sel.appendChild(opt); });
+            }
+            
+            updateView();
+            document.getElementById('loader').style.display = 'none';
+        } catch (error) {
+            alert('การเชื่อมต่อล้มเหลว โปรดตรวจสอบ URL ของ GAS หรือการ Deploy!');
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    // ---------------- Dashboard & Charts ---------------- //
+
+    function updateView() {
+        if (!dbData || !dbData.overall) return;
+        const month = document.getElementById('monthSelect').value;
+        const data = month === 'all' ? dbData.overall : dbData.monthlyDetails[month];
+        if (data) {
+            document.getElementById("stat-total").innerText = data.total.toLocaleString();
+            document.getElementById("stat-due").innerText = data.due.toLocaleString();
+            document.getElementById("stat-notDue").innerText = data.notDue.toLocaleString();
+            document.getElementById("stat-insSent").innerText = data.insSent.toLocaleString();
+            document.getElementById("stat-dueNotSent").innerText = data.dueNotSent.toLocaleString();
+            renderCharts(month, data);
+        }
+        handleTableChange();
+    }
+
+    function renderCharts(mode, data) {
+        Object.values(charts).forEach(c => c && c.destroy());
+        const ctxBar = document.getElementById('barChart')?.getContext('2d');
+        const ctxPie = document.getElementById('pieChart')?.getContext('2d');
+        const ctxHist = document.getElementById('histChart')?.getContext('2d');
+        
+        const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
+
+        if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ยังไม่ครบกำหนด', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].notDue) : [data.notDue], backgroundColor: '#f59e0b' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { color: gridColor } }, y: { stacked: true, grid: { color: gridColor } } } } });
+        
+        if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'], borderColor: isDarkMode ? '#1e293b' : '#ffffff' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        
+        if (ctxHist) {
+            const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
+            charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: '#6366f1' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } } } });
+        }
+    }
+
+    // ---------------- Table Data Management ---------------- //
+
+    // Helper: แปลงวันที่ (DD/MM/YYYY หรือ YYYY-MM-DD) เป็น Date Object และรองรับปี พ.ศ.
+    function parseDateString(dateString) {
+        if (!dateString) return null;
+        
+        let year, month, day;
+        
+        // กรณีเป็น YYYY-MM-DD
+        if (dateString.includes('-')) {
+            const parts = dateString.split('-');
+            year = parseInt(parts[0]);
+            month = parseInt(parts[1]) - 1;
+            day = parseInt(parts[2]);
+        } 
+        // กรณีเป็น DD/MM/YYYY
+        else if (dateString.includes('/')) {
+            const parts = dateString.split('/');
+            day = parseInt(parts[0]);
+            month = parseInt(parts[1]) - 1;
+            year = parseInt(parts[2]);
+        } else {
+            return null;
+        }
+
+        // ตรวจสอบและแปลงปี พ.ศ. เป็น ค.ศ. (ถ้าปีเกิน 2500 ถือว่าเป็นปี พ.ศ. ให้ลบ 543)
+        if (year > 2500) {
+            year -= 543;
+        }
+
+        return new Date(year, month, day);
+    }
+
+    function handleSearchInput() {
+        currentPage = 1;
+        handleTableChange();
+    }
+
+    function handleTableChange() {
+        const month = document.getElementById('monthSelect').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        const search = document.getElementById('patientSearch').value.toLowerCase();
+        
+        // Date Range
+        const startDStr = document.getElementById('startDate').value;
+        const endDStr = document.getElementById('endDate').value;
+        const startD = startDStr ? new Date(startDStr) : null;
+        const endD = endDStr ? new Date(endDStr) : null;
+        if (startD) startD.setHours(0,0,0,0);
+        if (endD) endD.setHours(23,59,59,999);
+        
+        let filtered = (dbData.rawData || []).filter(p => month === 'all' || p.month === month);
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(p => {
+                if (statusFilter === 'เกินกำหนด') return p.isOverdue;
+                if (statusFilter === 'ส่งแล้ว') return p.isSent;
+                if (statusFilter === 'รอส่ง') return !p.isOverdue && !p.isSent; 
+                return true;
+            });
+        }
+
+        if (search) {
+            filtered = filtered.filter(p => (p.hn+p.an+p.name).toLowerCase().includes(search));
+        }
+
+        // Date Filtering logic
+        if (startD || endD) {
+            filtered = filtered.filter(p => {
+                const pDate = parseDateString(p.admitDate);
+                if (!pDate) return true; // ถ้าวันที่ในระบบไม่มี/อ่านไม่ได้ ให้แสดงไปก่อน
+                if (startD && pDate < startD) return false;
+                if (endD && pDate > endD) return false;
+                return true;
+            });
+        }
+
+        currentFilteredData = filtered;
+        applySorting(); 
+        renderTablePage(); 
+        renderPagination(); 
+    }
+
+    function handleSort(col, headerElement) {
+        if (sortCol === col) {
+            sortAsc = !sortAsc;
+        } else {
+            sortCol = col;
+            sortAsc = true;
+        }
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.classList.remove('active-sort');
+            const icon = th.querySelector('i');
+            if(icon) icon.className = 'fas fa-sort';
+        });
+        
+        if(headerElement) {
+            headerElement.classList.add('active-sort');
+            const icon = headerElement.querySelector('i');
+            if(icon) icon.className = sortAsc ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+
+        applySorting();
+        renderTablePage();
+    }
+
+    function applySorting() {
+        if (!sortCol) return;
+        currentFilteredData.sort((a, b) => {
+            let valA = a[sortCol] || ''; let valB = b[sortCol] || '';
+            
+            // กรณีเรียงตามวันที่ (เพิ่ม dischargeDate)
+            if (sortCol === 'admitDate' || sortCol === 'dischargeDate') {
+                let dA = parseDateString(valA) || new Date(0);
+                let dB = parseDateString(valB) || new Date(0);
+                return sortAsc ? dA - dB : dB - dA;
+            }
+            // กรณีเรียงตัวเลขวันค้าง
+            if (sortCol === 'lateDays') {
+                valA = Number(valA) || 0; valB = Number(valB) || 0;
+            }
+            
+            if (valA === valB) return 0;
+            if (valA > valB) return sortAsc ? 1 : -1;
+            return sortAsc ? -1 : 1;
+        });
+    }
+
+    function toggleNameMask() {
+        if(!isLoggedIn) return;
+        showFullName = !showFullName;
+        const icon = document.querySelector('#btnToggleName i');
+        icon.className = showFullName ? 'fas fa-eye-slash' : 'fas fa-eye';
+        renderTablePage();
+    }
+
+    // ---------------- Patient Detail Modal ---------------- //
+
+    function openDetailModal(index) {
+        if(!isLoggedIn) return; // กันคนนอกกด
+        const p = currentFilteredData[index];
+        if(!p) return;
+
+        let safeName = p.name;
+        if(!showFullName && safeName && safeName.toLowerCase() !== "#n/a") {
+            let parts = safeName.trim().split(/\s+/);
+            if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "***";
+        }
+
+        document.getElementById('detName').innerText = safeName;
+        document.getElementById('detHN').innerText = 'HN: ' + p.hn;
+        document.getElementById('detAN').innerText = 'AN: ' + p.an;
+        document.getElementById('detAdmitDate').innerText = p.admitDate || '-';
+        document.getElementById('detDischargeDate').innerText = p.dischargeDate || '-';
+        document.getElementById('detMonth').innerText = p.month || '-';
+        document.getElementById('detDueStatus').innerText = p.dueStatus || '-';
+        
+        let lateText = p.lateDays > 0 ? p.lateDays + ' วัน' : 'ไม่ค้าง';
+        document.getElementById('detLateDays').innerText = lateText;
+        document.getElementById('detLateDays').className = p.lateDays > 0 ? 'text-danger' : 'text-success';
+
+        let badgeClass = 'bg-warning-light'; 
+        let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
+        if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
+        else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง (เกินกำหนด)'; }
+        
+        const badge = document.getElementById('detStatusBadge');
+        badge.className = `badge ${badgeClass}`;
+        badge.innerText = statusText;
+
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+    function renderTablePage() {
+        const tbody = document.getElementById('patientTableBody');
+        const emptyState = document.getElementById('emptyState');
+        tbody.innerHTML = '';
+
+        if (currentFilteredData.length === 0) {
+            emptyState.style.display = 'block';
+            document.getElementById('patientTable').style.display = 'none';
+            return;
+        } else {
+            emptyState.style.display = 'none';
+            document.getElementById('patientTable').style.display = 'table';
+        }
+
+        const startIdx = (currentPage - 1) * rowsPerPage;
+        const pageData = currentFilteredData.slice(startIdx, startIdx + rowsPerPage);
+
+        pageData.forEach((p, idxInPage) => {
+            const actualIndex = startIdx + idxInPage; // อ้างอิง index จริงใน array เพื่อส่งไปแสดง Modal
+            const tr = document.createElement('tr');
+            tr.onclick = () => openDetailModal(actualIndex);
+            
+            let badgeClass = 'bg-warning-light'; 
+            let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
+            if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
+            else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
+
+            let safeName = p.name;
+            if(!showFullName && safeName && safeName.toLowerCase() !== "#n/a") {
+                let parts = safeName.trim().split(/\s+/);
+                if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "***";
+            } else if (!safeName) {
+                safeName = "-";
+            }
+
+            tr.innerHTML = `
+                <td><span style="font-size:0.8rem; color:var(--primary);">${p.month}</span></td>
+                <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td>
+                <td>${p.admitDate}</td>
+                <td>${p.dischargeDate || '-'}</td>
+                <td><span style="font-size:0.8rem; color:var(--text-muted);">${p.dueStatus}</span></td>
+                <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                <td class="${p.isOverdue ? 'text-danger' : ''}">${p.lateDays > 0 ? p.lateDays + ' วัน' : '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('paginationControls');
+        container.innerHTML = '';
+        
+        const totalPages = Math.ceil(currentFilteredData.length / rowsPerPage);
+        if (totalPages <= 1) return; 
+
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'page-btn'; prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> ก่อนหน้า';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { currentPage--; renderTablePage(); renderPagination(); };
+        container.appendChild(prevBtn);
+
+        const pageInfo = document.createElement('span');
+        pageInfo.style.fontSize = '0.9rem'; pageInfo.style.color = 'var(--text-muted)';
+        pageInfo.innerText = `หน้า ${currentPage} จาก ${totalPages}`;
+        container.appendChild(pageInfo);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'page-btn'; nextBtn.innerHTML = 'ถัดไป <i class="fas fa-chevron-right"></i>';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { currentPage++; renderTablePage(); renderPagination(); };
+        container.appendChild(nextBtn);
+    }
+
+    function exportToCSV() {
+        if(!isLoggedIn) return;
+        
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+        csvContent += "เดือน,HN,AN,ชื่อผู้ป่วย,วันที่ Admit,วันที่จำหน่าย,สถานะกำหนดส่ง,การส่งชาร์ท,วันค้าง\n";
+        
+        currentFilteredData.forEach(p => {
+            let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
+            if (p.isSent) statusText = 'ชาร์ทส่งแล้ว';
+            else if (p.isOverdue) statusText = 'ค้างส่ง';
+            
+            let row = `"${p.month}","${p.hn}","${p.an}","${p.name}","${p.admitDate}","${p.dischargeDate || ''}","${p.dueStatus}","${statusText}","${p.lateDays || 0}"`;
+            csvContent += row + "\n";
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `รายการผู้ป่วย_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+</script>
 </body>
 </html>
