@@ -21,7 +21,9 @@
         .view-section.active { display: flex; }
         header { display: flex; justify-content: space-between; align-items: center; }
         header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; }
-        select, input[type="text"] { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; }
+        select, input[type="text"], .btn { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.2s; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; }
         .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; }
         .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
@@ -39,18 +41,20 @@
         #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
         .spinner { width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        #lineReportText { width: 100%; height: 100%; min-height: 400px; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #334155; font-size: 0.95rem; resize: none; line-height: 1.6; }
+        #lineReportText:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังวิเคราะห์ข้อมูล...</p></div>
+<div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังประมวลผลข้อมูลล่าสุด...</p></div>
 
 <aside class="sidebar">
     <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
     <nav class="nav-menu">
         <button class="nav-item active" onclick="switchView('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard Overview</span></button>
         <button class="nav-item" onclick="switchView('patients', this)"><i class="fas fa-id-card"></i><span>Patient Records</span></button>
-        <button class="nav-item" onclick="switchView('reports', this)"><i class="fas fa-file-excel"></i><span>รายงานค้างส่ง</span></button>
+        <button class="nav-item" onclick="switchView('reports', this)"><i class="fas fa-file-alt"></i><span>LINE Report</span></button>
     </nav>
 </aside>
 
@@ -60,7 +64,7 @@
             <h2>วิเคราะห์สถิติภาพรวม</h2>
             <div class="header-actions">
                 <select id="monthSelect" onchange="updateView()"><option value="all">แสดงข้อมูลทุกเดือน</option></select>
-                <button onclick="refreshData()" style="padding: 8px 12px; border-radius: 10px; border:1px solid #ddd; cursor:pointer;"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="refreshData()" class="btn" style="cursor:pointer;"><i class="fas fa-sync-alt"></i></button>
             </div>
         </header>
 
@@ -92,7 +96,7 @@
                 </select>
             </div>
         </header>
-        <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto;">
+        <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto; box-shadow: var(--shadow);">
             <table id="patientTable">
                 <thead><tr><th>เดือน</th><th>HN</th><th>AN</th><th>ชื่อผู้ป่วย</th><th>วันที่ Admit</th><th>สถานะกำหนดส่ง</th><th>การส่งชาร์ท</th><th>วันค้าง</th></tr></thead>
                 <tbody id="patientTableBody"></tbody>
@@ -103,38 +107,15 @@
     <section id="view-reports" class="view-section">
         <header>
             <div>
-                <h2>รายงานติดตามชาร์ทค้างส่ง</h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">ดึงข้อมูลเฉพาะชาร์ทที่ครบกำหนดแล้วแต่ยังไม่ได้ส่ง</p>
+                <h2>รายงานส่งกลุ่ม LINE</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">สรุปรายการชาร์ทค้างส่ง (เกินกำหนด) เพื่อติดตามงาน</p>
             </div>
             <div class="header-actions">
-                <button onclick="exportReportCSV()" style="padding: 10px 16px; border-radius: 10px; border:none; background:var(--primary); color:white; cursor:pointer; font-weight:500; display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-file-download"></i> ส่งออกข้อมูล (CSV)
-                </button>
+                <button onclick="copyLineReport()" class="btn btn-primary"><i class="fas fa-copy"></i> คัดลอกข้อความ</button>
             </div>
         </header>
-
-        <div class="card" style="border-left: 5px solid var(--danger); background: #fffcfc;">
-            <span class="card-label">จำนวนที่ค้างประจำวัน</span>
-            <div class="card-val text-danger" style="display: flex; align-items: baseline; gap: 8px;">
-                <span id="report-overdue-count">0</span>
-                <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">ราย</span>
-            </div>
-        </div>
-
-        <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto;">
-            <table id="reportTable">
-                <thead>
-                    <tr>
-                        <th>ลำดับ</th>
-                        <th>HN</th>
-                        <th>AN</th>
-                        <th>วันที่ Admit</th>
-                        <th>วันที่ Discharge</th>
-                        <th>สถานะ</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTableBody"></tbody>
-            </table>
+        <div class="chart-card" style="flex: 1; padding: 1rem;">
+            <textarea id="lineReportText" readonly placeholder="กำลังสร้างรายงาน..."></textarea>
         </div>
     </section>
 </main>
@@ -142,7 +123,7 @@
 <script>
     let dbData = null; let charts = {};
     
-    // *** วาง URL WEB APP ของคุณตรงนี้ (ใช้ลิงก์ที่ใช้งานได้ปัจจุบันเลยครับ) ***
+    // URL Web App ล่าสุด
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
     function switchView(viewId, element) {
@@ -190,7 +171,7 @@
             renderCharts(month, data);
         }
         handleTableChange();
-        updateReportView(); // เรียกอัปเดตหน้าต่างรายงานด้วย
+        generateLineReport(); // สร้างรายงาน LINE ใหม่ทุกครั้งที่ตัวเลขเปลี่ยน
     }
 
     function handleTableChange() {
@@ -218,6 +199,7 @@
 
         filtered.forEach(p => {
             const tr = document.createElement('tr');
+            
             let badgeClass = 'bg-warning-light'; 
             let statusText = (p.status !== "" && p.status.toLowerCase() !== "#n/a") ? p.status : 'รอส่ง';
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
@@ -242,72 +224,58 @@
         });
     }
 
-    // --- ฟังก์ชันสำหรับหน้ารายงานค้างส่ง ---
-    function updateReportView() {
+    // ฟังก์ชันใหม่: สร้างข้อความรายงานสำหรับ LINE
+    function generateLineReport() {
+        if (!dbData || !dbData.rawData) return;
+        
         const month = document.getElementById('monthSelect').value;
-        const tbody = document.getElementById('reportTableBody');
-        if (!tbody) return; tbody.innerHTML = '';
-
-        // กรองเอาเฉพาะข้อมูลที่ค้างส่ง (isOverdue = true)
-        let filtered = (dbData.rawData || []).filter(p => (month === 'all' || p.month === month) && p.isOverdue);
-
-        // อัปเดตตัวเลขจำนวนที่ค้างประจำวัน
-        document.getElementById("report-overdue-count").innerText = filtered.length.toLocaleString();
-
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--success); padding:20px;">เยี่ยมมาก! ไม่มีชาร์ทค้างส่งเลย</td></tr>`;
-            return;
+        
+        // คัดกรองเฉพาะคนที่ "ค้างส่ง (เกินกำหนด)" ตามเดือนที่เลือก
+        let overduePatients = dbData.rawData.filter(p => p.isOverdue);
+        if (month !== 'all') {
+            overduePatients = overduePatients.filter(p => p.month === month);
         }
 
-        filtered.forEach((p, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td><strong>${p.hn}</strong></td>
-                <td>${p.an}</td>
-                <td>${p.admitDate || '-'}</td>
-                <td>${p.dcDate || '-'}</td>
-                <td><span class="badge bg-danger-light">ค้างส่ง</span></td>
-            `;
-            tbody.appendChild(tr);
-        });
+        const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        let reportText = `📢 รายงานติดตามชาร์ทค้างส่ง (เกินกำหนด)\nประจำวันที่: ${today}\n`;
+        if (month !== 'all') {
+            reportText += `ข้อมูลเฉพาะเดือน: ${month}\n`;
+        }
+        reportText += `=====================\n`;
+        reportText += `🛑 จำนวนที่ค้างประจำวัน: ${overduePatients.length} ราย\n`;
+        reportText += `=====================\n\n`;
+
+        if (overduePatients.length === 0) {
+            reportText += `🎉 ยอดเยี่ยม! วันนี้ไม่มีชาร์ทค้างส่งครับ`;
+        } else {
+            overduePatients.forEach((p, index) => {
+                let safeAdmit = (p.admitDate && p.admitDate !== '#N/A') ? p.admitDate : "-";
+                let safeDC = (p.dcDate && p.dcDate !== '#N/A') ? p.dcDate : "-";
+                
+                reportText += `${index + 1}. HN: ${p.hn} | AN: ${p.an}\n`;
+                reportText += `   Admit: ${safeAdmit} | DC: ${safeDC}\n`;
+                reportText += `   สถานะ: ค้างส่ง (เกินกำหนด)\n`;
+                if(p.lateDays > 0) reportText += `   *วันค้าง: ${p.lateDays} วัน\n`;
+                reportText += `\n`;
+            });
+        }
+
+        document.getElementById('lineReportText').value = reportText;
     }
 
-    function exportReportCSV() {
-        const month = document.getElementById('monthSelect').value;
-        let filtered = (dbData.rawData || []).filter(p => (month === 'all' || p.month === month) && p.isOverdue);
-
-        if (filtered.length === 0) {
-            alert("ไม่พบข้อมูลชาร์ทค้างส่งสำหรับส่งออก");
-            return;
-        }
-
-        // ใส่ \uFEFF BOM เพื่อให้โปรแกรม Excel สามารถอ่านภาษาไทยในไฟล์ CSV ได้โดยไม่เพี้ยน
-        let csvContent = "\uFEFFลำดับ,HN,AN,วันที่ Admit,วันที่ Discharge,สถานะ\n";
-
-        filtered.forEach((p, index) => {
-            // ใช้ ="xxx" เพื่อป้องกัน Excel แปลง HN ที่อาจมีสูตรหรือเลขศูนย์นำหน้า
-            let hn = `="${p.hn}"`; 
-            let an = `="${p.an}"`;
-            let admit = p.admitDate ? p.admitDate : "-";
-            let dc = p.dcDate ? p.dcDate : "-";
-            let status = "ค้างส่ง";
-
-            csvContent += `${index + 1},${hn},${an},${admit},${dc},${status}\n`;
+    // ฟังก์ชันสำหรับกดคัดลอกข้อความ
+    function copyLineReport() {
+        const textarea = document.getElementById('lineReportText');
+        textarea.select();
+        textarea.setSelectionRange(0, 99999); // สำหรับมือถือ
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            alert('✅ คัดลอกข้อความเรียบร้อยแล้ว สามารถนำไปวางในกลุ่ม LINE ได้เลยครับ');
+        }).catch(err => {
+            // สำรองกรณีบราวเซอร์ไม่รองรับ clipboard API
+            document.execCommand('copy');
+            alert('✅ คัดลอกข้อความเรียบร้อยแล้ว!');
         });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        
-        // ตั้งชื่อไฟล์ตามวันที่ของวันนี้
-        const today = new Date().toLocaleDateString('th-TH').replace(/\//g, '-');
-        link.setAttribute("download", `รายงานชาร์ทค้างส่ง_${today}.csv`);
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
 
     function renderCharts(mode, data) {
@@ -317,11 +285,10 @@
         const ctxHist = document.getElementById('histChart')?.getContext('2d');
         
         if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
-        
         if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-        
         if (ctxHist) {
-            const dist = data.lateDaysDist || {}; const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
+            const dist = data.lateDaysDist || {}; 
+            const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
             charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: '#6366f1' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
     }
