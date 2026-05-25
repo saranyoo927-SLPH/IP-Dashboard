@@ -153,6 +153,7 @@
     let pendingViewId = null;
     let pendingElement = null;
     
+    // URL Web App
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
     function checkLogin() {
@@ -283,7 +284,6 @@
                 safeName = "-";
             }
 
-            // เพิ่มการแทรกค่า p.dcDate ในส่วนแถวของเนื้อหาตาราง
             tr.innerHTML = `
                 <td><span style="font-size:0.8rem; color:var(--primary);">${p.month}</span></td>
                 <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td><td>${p.admitDate}</td>
@@ -342,7 +342,41 @@
         const ctxPie = document.getElementById('pieChart')?.getContext('2d');
         const ctxHist = document.getElementById('histChart')?.getContext('2d');
         
-        if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
+        // --- ส่วนที่แก้ไข: เพิ่ม 'ยังไม่ครบกำหนด' ลงในกราฟแท่ง ---
+        if (ctxBar) {
+            charts.bar = new Chart(ctxBar, { 
+                type: 'bar', 
+                data: { 
+                    labels: mode === 'all' ? (dbData.months || []) : [mode], 
+                    datasets: [ 
+                        { 
+                            label: 'ส่งแล้ว', 
+                            data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], 
+                            backgroundColor: '#10b981' 
+                        },
+                        { 
+                            label: 'ยังไม่ครบกำหนด', 
+                            data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].notDue) : [data.notDue], 
+                            backgroundColor: '#f59e0b' 
+                        },
+                        { 
+                            label: 'ค้างส่ง', 
+                            data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], 
+                            backgroundColor: '#ef4444' 
+                        } 
+                    ] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { stacked: true }, 
+                        y: { stacked: true } 
+                    } 
+                } 
+            });
+        }
+        
         if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         if (ctxHist) {
             const dist = data.lateDaysDist || {}; 
