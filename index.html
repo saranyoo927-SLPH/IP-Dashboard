@@ -8,28 +8,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #6366f1; --primary-light: #e0e7ff; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f8fafc; --sidebar-bg: #ffffff; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        :root { --primary: #6366f1; --primary-light: #e0e7ff; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f8fafc; --sidebar-bg: #ffffff; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { background: var(--bg); color: var(--text-main); display: grid; grid-template-columns: 260px 1fr; height: 100vh; overflow: hidden; }
-        .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 2rem; }
+        .sidebar { background: var(--sidebar-bg); padding: 2rem 1.5rem; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 2rem; position: relative;}
         .brand { display: flex; align-items: center; gap: 12px; color: var(--primary); font-size: 1.25rem; font-weight: 600; }
         .nav-menu { display: flex; flex-direction: column; gap: 8px; }
-        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; }
+        .nav-item { padding: 12px 16px; border-radius: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; cursor: pointer; border: none; background: transparent; font-size: 1rem; width: 100%; text-align: left; transition: all 0.3s ease;}
         .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+        .nav-item:hover:not(.active) { background: #f1f5f9; color: var(--text-main); }
         .content { height: 100vh; display: flex; flex-direction: column; padding: 1.5rem 2.5rem; gap: 1.5rem; overflow-y: auto; }
-        .view-section { display: none; flex-direction: column; gap: 1.5rem; }
+        .view-section { display: none; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.3s ease; }
         .view-section.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         header { display: flex; justify-content: space-between; align-items: center; }
         header h2 { font-weight: 600; color: var(--text-main); font-size: 1.5rem; }
         select, input[type="text"], .btn { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem; font-family: inherit; }
         .btn-primary { background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.2s; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; }
-        .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; }
+        .card { background: var(--card-bg); padding: 1.25rem; border-radius: 20px; box-shadow: var(--shadow); position: relative; border: 1px solid #f1f5f9;}
         .card-label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
         .card-val { font-size: 1.75rem; font-weight: 700; }
         .charts-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; flex: 1; min-height: 350px;}
-        .chart-card { background: white; padding: 1.5rem; border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+        .chart-card { background: white; padding: 1.5rem; border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; border: 1px solid #f1f5f9;}
         .chart-wrapper { flex: 1; position: relative; min-height: 250px;}
         .full-width { grid-column: span 2; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
@@ -42,12 +44,37 @@
         .spinner { width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         #lineReportText { width: 100%; height: 100%; min-height: 400px; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #334155; font-size: 0.95rem; resize: none; line-height: 1.6; }
-        #lineReportText:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+        
+        /* CSS สำหรับระบบ Login */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .modal-box { background: white; padding: 2.5rem; border-radius: 24px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); text-align: center; }
+        .modal-box i { font-size: 3rem; color: var(--primary); margin-bottom: 1rem; }
+        .modal-box h3 { margin-bottom: 0.5rem; color: var(--text-main); font-size: 1.5rem; }
+        .modal-box p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .login-input { width: 100%; padding: 12px 16px; margin-bottom: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 1rem; outline: none; transition: 0.2s;}
+        .login-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        .login-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .login-btn:hover { background: #4f46e5; transform: translateY(-1px); }
+        .cancel-btn { margin-top: 15px; background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+        
+        #logoutBtn { margin-top: auto; padding: 12px; text-align: center; cursor: pointer; color: var(--danger); background: #fee2e2; border: none; border-radius: 12px; font-weight: 500; display: none; }
     </style>
 </head>
 <body>
 
 <div id="loader"><div class="spinner"></div><p style="margin-top:10px;">กำลังประมวลผลข้อมูลล่าสุด...</p></div>
+
+<div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+        <i class="fas fa-user-lock"></i>
+        <h3>ระบบรักษาความปลอดภัย</h3>
+        <p>กรุณาล็อกอินเพื่อเข้าดูข้อมูลผู้ป่วยและรายงาน</p>
+        <input type="text" id="username" class="login-input" placeholder="ชื่อผู้ใช้งาน (Username)" autocomplete="off">
+        <input type="password" id="password" class="login-input" placeholder="รหัสผ่าน (Password)" onkeyup="if(event.key === 'Enter') checkLogin()">
+        <button class="login-btn" onclick="checkLogin()">เข้าสู่ระบบ</button>
+        <button class="cancel-btn" onclick="closeLogin()">ยกเลิก</button>
+    </div>
+</div>
 
 <aside class="sidebar">
     <div class="brand"><i class="fas fa-notes-medical"></i><span>IP Analytics Pro</span></div>
@@ -56,6 +83,7 @@
         <button class="nav-item" onclick="switchView('patients', this)"><i class="fas fa-id-card"></i><span>Patient Records</span></button>
         <button class="nav-item" onclick="switchView('reports', this)"><i class="fas fa-file-alt"></i><span>LINE Report</span></button>
     </nav>
+    <button id="logoutBtn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
 </aside>
 
 <main class="content">
@@ -122,15 +150,66 @@
 
 <script>
     let dbData = null; let charts = {};
+    let isLoggedIn = false;
+    let pendingViewId = null;
+    let pendingElement = null;
     
-    // URL Web App ล่าสุด
+    // ใส่ URL ของ Web App ตรงนี้ (ไม่ต้องเปลี่ยนถ้าใช้ตัวล่าสุดอยู่แล้ว)
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxRrW3kgp-GxbNSDElaxc_6Cn-RMgkA0kR4mvKMc0XHHPwAJS0JxglhGxoYlh48cDDIcg/exec';
 
+    // --- ระบบตรวจสอบ Login ---
+    function checkLogin() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        
+        // ** ตั้งค่า รหัสผ่าน ตรงนี้ครับ **
+        if (user === 'admin' && pass === '1234') {
+            isLoggedIn = true;
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'block';
+            
+            // ล้างช่องใส่รหัสผ่าน
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+
+            // ไปยังหน้าที่ต้องการ
+            if (pendingViewId && pendingElement) {
+                switchView(pendingViewId, pendingElement);
+            }
+        } else {
+            alert('ชื่อผู้ใช้ หรือ รหัสผ่าน ไม่ถูกต้อง!');
+        }
+    }
+
+    function closeLogin() {
+        document.getElementById('loginModal').style.display = 'none';
+        pendingViewId = null;
+        pendingElement = null;
+    }
+
+    function logout() {
+        isLoggedIn = false;
+        document.getElementById('logoutBtn').style.display = 'none';
+        // เด้งกลับหน้า Dashboard เมื่อกดออกระบบ
+        switchView('dashboard', document.querySelector('.nav-item')); 
+        alert('ออกจากระบบเรียบร้อยแล้ว');
+    }
+
     function switchView(viewId, element) {
+        // ถ้าย้ายไปหน้าข้อมูลผู้ป่วย หรือหน้ารายงาน แต่ยังไม่ Login ให้เด้ง Popup
+        if ((viewId === 'patients' || viewId === 'reports') && !isLoggedIn) {
+            pendingViewId = viewId;
+            pendingElement = element;
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('username').focus();
+            return; // หยุดการย้ายหน้า
+        }
+
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); element.classList.add('active');
         document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active')); document.getElementById('view-' + viewId).classList.add('active');
         if (viewId === 'dashboard' || viewId === 'reports') updateView();
     }
+    // ----------------------
 
     async function refreshData() {
         document.getElementById('loader').style.display = 'flex';
@@ -171,7 +250,7 @@
             renderCharts(month, data);
         }
         handleTableChange();
-        generateLineReport(); // สร้างรายงาน LINE ใหม่ทุกครั้งที่ตัวเลขเปลี่ยน
+        generateLineReport();
     }
 
     function handleTableChange() {
@@ -224,24 +303,16 @@
         });
     }
 
-    // ฟังก์ชันใหม่: สร้างข้อความรายงานสำหรับ LINE
     function generateLineReport() {
         if (!dbData || !dbData.rawData) return;
-        
         const month = document.getElementById('monthSelect').value;
-        
-        // คัดกรองเฉพาะคนที่ "ค้างส่ง (เกินกำหนด)" ตามเดือนที่เลือก
         let overduePatients = dbData.rawData.filter(p => p.isOverdue);
-        if (month !== 'all') {
-            overduePatients = overduePatients.filter(p => p.month === month);
-        }
+        if (month !== 'all') { overduePatients = overduePatients.filter(p => p.month === month); }
 
         const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
         
         let reportText = `📢 รายงานติดตามชาร์ทค้างส่ง (เกินกำหนด)\nประจำวันที่: ${today}\n`;
-        if (month !== 'all') {
-            reportText += `ข้อมูลเฉพาะเดือน: ${month}\n`;
-        }
+        if (month !== 'all') { reportText += `ข้อมูลเฉพาะเดือน: ${month}\n`; }
         reportText += `=====================\n`;
         reportText += `🛑 จำนวนที่ค้างประจำวัน: ${overduePatients.length} ราย\n`;
         reportText += `=====================\n\n`;
@@ -252,48 +323,4 @@
             overduePatients.forEach((p, index) => {
                 let safeAdmit = (p.admitDate && p.admitDate !== '#N/A') ? p.admitDate : "-";
                 let safeDC = (p.dcDate && p.dcDate !== '#N/A') ? p.dcDate : "-";
-                
-                reportText += `${index + 1}. HN: ${p.hn} | AN: ${p.an}\n`;
-                reportText += `   Admit: ${safeAdmit} | DC: ${safeDC}\n`;
-                reportText += `   สถานะ: ค้างส่ง (เกินกำหนด)\n`;
-                if(p.lateDays > 0) reportText += `   *วันค้าง: ${p.lateDays} วัน\n`;
-                reportText += `\n`;
-            });
-        }
-
-        document.getElementById('lineReportText').value = reportText;
-    }
-
-    // ฟังก์ชันสำหรับกดคัดลอกข้อความ
-    function copyLineReport() {
-        const textarea = document.getElementById('lineReportText');
-        textarea.select();
-        textarea.setSelectionRange(0, 99999); // สำหรับมือถือ
-        navigator.clipboard.writeText(textarea.value).then(() => {
-            alert('✅ คัดลอกข้อความเรียบร้อยแล้ว สามารถนำไปวางในกลุ่ม LINE ได้เลยครับ');
-        }).catch(err => {
-            // สำรองกรณีบราวเซอร์ไม่รองรับ clipboard API
-            document.execCommand('copy');
-            alert('✅ คัดลอกข้อความเรียบร้อยแล้ว!');
-        });
-    }
-
-    function renderCharts(mode, data) {
-        Object.values(charts).forEach(c => c && c.destroy());
-        const ctxBar = document.getElementById('barChart')?.getContext('2d');
-        const ctxPie = document.getElementById('pieChart')?.getContext('2d');
-        const ctxHist = document.getElementById('histChart')?.getContext('2d');
-        
-        if (ctxBar) charts.bar = new Chart(ctxBar, { type: 'bar', data: { labels: mode === 'all' ? (dbData.months || []) : [mode], datasets: [ { label: 'ส่งแล้ว', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], backgroundColor: '#10b981' }, { label: 'ค้างส่ง', data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], backgroundColor: '#ef4444' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
-        if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-        if (ctxHist) {
-            const dist = data.lateDaysDist || {}; 
-            const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
-            charts.hist = new Chart(ctxHist, { type: 'bar', data: { labels: sortedKeys.map(k => k + ' วัน'), datasets: [{ label: 'จำนวนชาร์ท', data: sortedKeys.map(k => dist[k]), backgroundColor: '#6366f1' }] }, options: { responsive: true, maintainAspectRatio: false } });
-        }
-    }
-
-    window.onload = refreshData;
-</script>
-</body>
-</html>
+                reportText += `${index + 1}. HN: ${p.hn} | AN: ${p.an}\n
