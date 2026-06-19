@@ -125,7 +125,17 @@
         </header>
         <div style="background: white; border-radius: 15px; padding: 10px; overflow-x: auto; box-shadow: var(--shadow);">
             <table id="patientTable">
-                <thead><tr><th>เดือน</th><th>HN</th><th>AN</th><th>ชื่อผู้ป่วย</th><th>วันที่ Admit</th><th>วันที่จำหน่าย</th><th>สถานะกำหนดส่ง</th><th>การส่งชาร์ท</th><th>วันค้าง</th></tr></thead>
+                <!-- แก้ไขส่วนหัวตารางตรงนี้ -->
+                <thead>
+                    <tr>
+                        <th>AN</th>
+                        <th>HN</th>
+                        <th>วันที่ Admit</th>
+                        <th>วันที่จำหน่าย</th>
+                        <th>สถานะชาร์ท</th>
+                        <th>จำนวนวันที่เกินกำหนดส่ง</th>
+                    </tr>
+                </thead>
                 <tbody id="patientTableBody"></tbody>
             </table>
         </div>
@@ -264,6 +274,7 @@
             });
         }
 
+        // ยังคงให้ค้นหาด้วยชื่อได้ แม้ว่าจะไม่ได้แสดงผลในตารางก็ตาม
         if (search) {
             filtered = filtered.filter(p => (p.hn+p.an+p.name).toLowerCase().includes(search));
         }
@@ -276,19 +287,12 @@
             if (p.isSent) { badgeClass = 'bg-success-light'; statusText = 'ชาร์ทส่งแล้ว'; }
             else if (p.isOverdue) { badgeClass = 'bg-danger-light'; statusText = 'ค้างส่ง'; }
 
-            let safeName = p.name;
-            if(safeName && safeName.toLowerCase() !== "#n/a") {
-                let parts = safeName.trim().split(/\s+/);
-                if(parts.length > 1) safeName = parts[0] + " " + parts[1].charAt(0) + "XX";
-            } else {
-                safeName = "-";
-            }
-
+            // แก้ไขส่วนข้อมูลในตารางตรงนี้ให้สอดคล้องกับ Header ด้านบน
             tr.innerHTML = `
-                <td><span style="font-size:0.8rem; color:var(--primary);">${p.month}</span></td>
-                <td><strong>${p.hn}</strong></td><td>${p.an}</td><td>${safeName}</td><td>${p.admitDate}</td>
+                <td>${p.an}</td>
+                <td><strong>${p.hn}</strong></td>
+                <td>${p.admitDate}</td>
                 <td>${p.dcDate || "-"}</td>
-                <td><span style="font-size:0.8rem; color:var(--text-muted);">${p.dueStatus}</span></td>
                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
                 <td class="${p.isOverdue ? 'text-danger' : ''}">${p.lateDays > 0 ? p.lateDays + ' วัน' : '-'}</td>
             `;
@@ -304,14 +308,14 @@
 
         const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
         
-        let reportText = `📢 รายงานติดตามชาร์ทค้างส่ง (เกินกำหนด)\nประจำวันที่: ${today}\n`;
+        let reportText = `🚨 รายงานติดตามชาร์ทค้างส่ง (เกินกำหนด)\nประจำวันที่: ${today}\n`;
         if (month !== 'all') { reportText += `ข้อมูลเฉพาะเดือน: ${month}\n`; }
         reportText += `=====================\n`;
-        reportText += `🛑 จำนวนที่ค้างประจำวัน: ${overduePatients.length} ราย\n`;
+        reportText += `📌 จำนวนที่ค้างประจำวัน: ${overduePatients.length} ราย\n`;
         reportText += `=====================\n\n`;
 
         if (overduePatients.length === 0) {
-            reportText += `🎉 ยอดเยี่ยม! วันนี้ไม่มีชาร์ทค้างส่งครับ`;
+            reportText += `✅ ยอดเยี่ยม! วันนี้ไม่มีชาร์ทค้างส่งครับ`;
         } else {
             overduePatients.forEach((p, index) => {
                 let safeAdmit = (p.admitDate && p.admitDate !== '#N/A') ? p.admitDate : "-";
@@ -329,10 +333,10 @@
         textarea.select();
         textarea.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(textarea.value).then(() => {
-            alert('✅ คัดลอกข้อความเรียบร้อยแล้ว สามารถนำไปวางในกลุ่ม LINE ได้เลยครับ');
+            alert('📋 คัดลอกข้อความเรียบร้อยแล้ว สามารถนำไปวางในกลุ่ม LINE ได้เลยครับ');
         }).catch(err => {
             document.execCommand('copy');
-            alert('✅ คัดลอกข้อความเรียบร้อยแล้ว!');
+            alert('📋 คัดลอกข้อความเรียบร้อยแล้ว!');
         });
     }
 
@@ -342,7 +346,6 @@
         const ctxPie = document.getElementById('pieChart')?.getContext('2d');
         const ctxHist = document.getElementById('histChart')?.getContext('2d');
         
-        // --- ส่วนที่แก้ไข: เพิ่ม 'ยังไม่ครบกำหนด' ลงในกราฟแท่ง ---
         if (ctxBar) {
             charts.bar = new Chart(ctxBar, { 
                 type: 'bar', 
