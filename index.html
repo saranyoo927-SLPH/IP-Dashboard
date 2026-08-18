@@ -239,22 +239,21 @@
         }
     }
 
-    function updateView() {
-        if (!dbData || !dbData.overall) return;
-        const month = document.getElementById('monthSelect').value;
-        const data = month === 'all' ? dbData.overall : dbData.monthlyDetails[month];
-        if (data) {
-            document.getElementById("stat-total").innerText = data.total.toLocaleString();
-            document.getElementById("stat-due").innerText = data.due.toLocaleString();
-            document.getElementById("stat-notDue").innerText = data.notDue.toLocaleString();
-            document.getElementById("stat-insSent").innerText = data.insSent.toLocaleString();
-            document.getElementById("stat-dueNotSent").innerText = data.dueNotSent.toLocaleString();
-            renderCharts(month, data);
-        }
-        handleTableChange();
-        generateLineReport();
-    }
+function updateView() {
+        const val = document.getElementById('monthSelect').value;
+        const data = val === 'all' ? dbData.overall : dbData.monthlyDetails[val];
+        
+        // ใช้ ?? 0 เพื่อป้องกัน Error เวลาที่ข้อมูลเป็นค่าว่าง หรือเป็นเลข 0
+        const totalPatients = data.patients ?? data.total ?? 0;
+        
+        document.getElementById('stat-total').innerText = totalPatients.toLocaleString();
+        document.getElementById('stat-due').innerText = (data.due ?? 0).toLocaleString();
+        document.getElementById('stat-notDue').innerText = (data.notDue ?? 0).toLocaleString();
+        document.getElementById('stat-insSent').innerText = (data.insSent ?? 0).toLocaleString();
+        document.getElementById('stat-dueNotSent').innerText = (data.dueNotSent ?? 0).toLocaleString();
 
+        renderCharts(val, data);
+    }
     function handleTableChange() {
         const month = document.getElementById('monthSelect').value;
         const statusFilter = document.getElementById('statusFilter').value;
