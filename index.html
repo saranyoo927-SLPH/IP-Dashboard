@@ -355,17 +355,29 @@ function updateView() {
                     datasets: [ 
                         { 
                             label: 'ส่งแล้ว', 
-                            data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].insSent) : [data.insSent], 
+                            data: mode === 'all' 
+                                ? dbData.months.map(m => dbData.monthlyDetails[m].insSent ?? 0) 
+                                : [data.insSent ?? 0], 
                             backgroundColor: '#10b981' 
                         },
                         { 
-                            label: 'ยังไม่ครบกำหนด', 
-                            data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].notDue) : [data.notDue], 
+                            label: 'รอส่ง (ยังไม่เกินกำหนด)', 
+                            data: mode === 'all' 
+                                ? dbData.months.map(m => {
+                                    const d = dbData.monthlyDetails[m] || {};
+                                    const total = d.patients ?? d.total ?? 0;
+                                    const sent = d.insSent ?? 0;
+                                    const overdue = d.dueNotSent ?? 0;
+                                    return Math.max(total - sent - overdue, 0);
+                                })
+                                : [Math.max((data.patients ?? data.total ?? 0) - (data.insSent ?? 0) - (data.dueNotSent ?? 0), 0)], 
                             backgroundColor: '#f59e0b' 
                         },
                         { 
                             label: 'ค้างส่ง', 
-                            data: mode === 'all' ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent) : [data.dueNotSent], 
+                            data: mode === 'all' 
+                                ? dbData.months.map(m => dbData.monthlyDetails[m].dueNotSent ?? 0) 
+                                : [data.dueNotSent ?? 0], 
                             backgroundColor: '#ef4444' 
                         } 
                     ] 
