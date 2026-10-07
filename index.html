@@ -106,6 +106,7 @@
         <div class="charts-container">
             <div class="chart-card"><h3>สถิตินำส่งรายเดือน</h3><div class="chart-wrapper"><canvas id="barChart"></canvas></div></div>
             <div class="chart-card"><h3>ประสิทธิภาพเวลา</h3><div class="chart-wrapper"><canvas id="pieChart"></canvas></div></div>
+            <div class="chart-card full-width"><h3>ประสิทธิภาพเวลา จำแนกรายเดือน</h3><div class="chart-wrapper"><canvas id="timeMonthlyChart"></canvas></div></div>
             <div class="chart-card full-width"><h3>การกระจายตัวของจำนวนวันช้า</h3><div class="chart-wrapper"><canvas id="histChart"></canvas></div></div>
         </div>
     </section>
@@ -343,6 +344,7 @@ function updateView() {
         Object.values(charts).forEach(c => c && c.destroy());
         const ctxBar = document.getElementById('barChart')?.getContext('2d');
         const ctxPie = document.getElementById('pieChart')?.getContext('2d');
+        const ctxTimeMonthly = document.getElementById('timeMonthlyChart')?.getContext('2d');
         const ctxHist = document.getElementById('histChart')?.getContext('2d');
         
         if (ctxBar) {
@@ -380,6 +382,46 @@ function updateView() {
         }
         
         if (ctxPie) charts.pie = new Chart(ctxPie, { type: 'doughnut', data: { labels: ['ส่งทันเวลา', 'ชาร์ทช้า'], datasets: [{ data: [data.onTime || 0, data.late || 0], backgroundColor: ['#6366f1', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+
+        if (ctxTimeMonthly) {
+            const timeLabels = mode === 'all' ? (dbData.months || []) : [mode];
+            const timeMonthly = timeLabels.map(m => mode === 'all' ? (dbData.monthlyDetails[m] || {}) : data);
+            const onTimePct = timeMonthly.map(d => {
+                const onTime = d.onTime || 0;
+                const late = d.late || 0;
+                const total = onTime + late;
+                return total > 0 ? Number(((onTime / total) * 100).toFixed(1)) : 0;
+            });
+            const latePct = timeMonthly.map(d => {
+                const onTime = d.onTime || 0;
+                const late = d.late || 0;
+                const total = onTime + late;
+                return total > 0 ? Number(((late / total) * 100).toFixed(1)) : 0;
+            });
+
+            charts.timeMonthly = new Chart(ctxTimeMonthly, {
+                type: 'bar',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        { label: 'ส่งทันเวลา (%)', data: onTimePct, backgroundColor: '#6366f1' },
+                        { label: 'ชาร์ทช้า (%)', data: latePct, backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: value => value + '%' } }
+                    },
+                    plugins: {
+                        tooltip: { callbacks: { label: context => `${context.dataset.label}: ${context.parsed.y}%` } }
+                    }
+                }
+            });
+        }
+
         if (ctxHist) {
             const dist = data.lateDaysDist || {}; 
             const sortedKeys = Object.keys(dist).sort((a,b) => parseInt(a)-parseInt(b));
